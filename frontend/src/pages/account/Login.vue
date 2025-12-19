@@ -3,7 +3,7 @@
         <v-card class="mx-auto px-6 py-8" min-width="344" max-width="344">
             <v-card-title>로그인 하세요.</v-card-title>
             <v-form v-model="form" @submit.prevent="login">
-                <v-text-field v-model="email" :readonly="loading" :rules="[required]" class="mb-2" label="Email"
+                <v-text-field v-model="username" :readonly="loading" :rules="[required]" class="mb-2" label="username"
                     clearable></v-text-field>
 
                 <v-text-field v-model="password" :readonly="loading" :rules="[required]" label="Password" type="password"
@@ -23,15 +23,25 @@
 <script setup>
 import { useAccountStore } from '@/stores/account'
 import { ref } from 'vue'
+import {useRouter} from 'vue-router'
 
-const form = ref(null)
-const email = ref(null)
-const password = ref(null)
+const form = ref(null);
+const username = ref(null);
+const password = ref(null);
 
-const accountStore = useAccountStore()
+const accountStore = useAccountStore();
 
+const router = useRouter()
 const login = () => {
-    accountStore.login(payload)
+    const payload = {
+        username: username.value,
+        password: password.value,
+    }
+    const success = accountStore.login(payload);
+
+    if (success) {
+        router.push('/')
+    }
 }
 </script>
 

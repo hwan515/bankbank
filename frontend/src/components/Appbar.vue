@@ -13,8 +13,12 @@
           <v-icon>mdi-heart</v-icon>
         </v-btn>
 
-        <v-btn icon to="/account/login">
+        <v-btn v-if="!accountStore.isLogin" icon to="/account/login">
           <v-icon>mdi-account</v-icon>
+        </v-btn>
+
+        <v-btn v-else @click="logout">
+          <v-icon>mdi-logout</v-icon>
         </v-btn>
 
         <v-btn icon>
@@ -24,7 +28,16 @@
 </template>
 
 <script setup>
+import { useAccountStore } from '@/stores/account';
+import { useRouter } from 'vue-router'
+const accountStore = useAccountStore()
+const router = useRouter()
+const logout =  async () => {
+  await accountStore.logout()
+  router.push('/')
+}
 
+console.log(accountStore.isLogin)
 </script>
 
 <style scoped>
