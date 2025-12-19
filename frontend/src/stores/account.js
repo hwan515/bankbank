@@ -2,7 +2,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import {ref} from 'vue'
-import { ca } from 'vuetify/locale'
 export const useAccountStore = defineStore('account', () => {
     
     //  토큰 설정. 
@@ -44,7 +43,28 @@ export const useAccountStore = defineStore('account', () => {
             localStorage.removeItem('token')
         }
     }
+
+    const register = async(payload) => {
+        try {
+            await axios.post(
+                'http://localhost:8000/accounts/signup/',
+            {
+                username:payload.username,
+                age:payload.age,
+                password1:payload.password,
+                password2:payload.password,
+                email:payload.email,
+                terms:payload.terms,
+            }
+        )
+            return true
+        } catch(error) {
+            console.log(error); 
+            return false
+        }
+    }
+
     return  {
-        login, token, isLogin, logout
+        login, token, isLogin, logout, register
     }
 })
