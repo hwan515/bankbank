@@ -10,11 +10,25 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
+import environ
 from pathlib import Path
+
+# set env
+env = environ.Env(
+    # 타입 캐스팅 설정 (DEBUG는 bool로 처리 등)
+    DEBUG=(bool, False)
+)
+
+# .env 파일 읽어오기
+BASE_DIR = Path(__file__).resolve().parent.parent
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# API key
+FIN_API_KEY = env('FIN_API_KEY')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -32,6 +46,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'accounts',
+    'products',
     'rest_framework',
     'rest_framework.authtoken',
     'dj_rest_auth',
@@ -61,8 +76,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:5173',
-    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://localhost:3000',
 ]
 
 ROOT_URLCONF = "card_project.urls"
@@ -89,9 +104,19 @@ WSGI_APPLICATION = "card_project.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': env('MYSQL_DB'),              
+        'USER': env('MYSQL_USER'),            
+        'PASSWORD': env('MYSQL_PASSWORD'),    
+        'HOST': env('MYSQL_HOST'),            
+        'PORT': env('MYSQL_PORT'),            
+        'OPTIONS': {
+            # 문자셋 설정 (한글 깨짐 방지)
+            'charset': 'utf8mb4',
+            # 타임아웃 등 추가 옵션 가능
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        },
     }
 }
 
