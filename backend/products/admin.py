@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import DepositProducts, DepositOptions, SavingProducts, SavingOptions
+from .models import DepositProducts, DepositOptions, SavingProducts, SavingOptions, FinancialCompany
 
 # Register your models here.
 @admin.register(DepositProducts)
@@ -18,3 +18,7 @@ class SavingProductsAdmin(admin.ModelAdmin):
 @admin.register(SavingOptions)
 class SavingOptionsAdmin(admin.ModelAdmin):
     list_display = ('product', 'save_trm', 'rsrv_type_nm', 'intr_rate')
+    
+@admin.register(FinancialCompany)
+class FinancialCompanyAdmin(admin.ModelAdmin):
+    list_display = ('kor_co_nm', 'fin_co_no')

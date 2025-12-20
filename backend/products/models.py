@@ -1,7 +1,21 @@
 from django.db import models
 
-# Create your models here.
+
+class FinancialCompany(models.Model):
+    """금융회사 정보"""
+    dcls_month = models.CharField(max_length=6, blank=True, default='')  # 공시 제출월 (YYYYMM)
+    fin_co_no = models.CharField(max_length=20, unique=True)  # 금융회사 코드
+    kor_co_nm = models.CharField(max_length=200)  # 금융회사명
+    dcls_chrg_man = models.TextField(blank=True, default='')  # 공시 담당자
+    homp_url = models.TextField(blank=True, default='')  # 홈페이지 주소
+    cal_tel = models.CharField(max_length=100, blank=True, default='')  # 콜센터 전화번호
+
+    def __str__(self):
+        return self.kor_co_nm
+
+
 class DepositProducts(models.Model):
+    dcls_month = models.CharField(max_length=6, blank=True, default='')  # 공시 제출월 (YYYYMM)
     fin_prdt_cd = models.CharField(max_length=100, unique=True)  # 금융상품코드 (중복 방지 핵심)
     kor_co_nm = models.TextField()               # 금융회사명
     fin_prdt_nm = models.TextField()             # 금융상품명
@@ -27,6 +41,7 @@ class DepositOptions(models.Model):
         return f"{self.product.fin_prdt_nm} - {self.save_trm}개월"
     
 class SavingProducts(models.Model):
+    dcls_month = models.CharField(max_length=6, blank=True, default='')  # 공시 제출월 (YYYYMM)
     fin_prdt_cd = models.CharField(max_length=100, unique=True)  # 금융상품코드
     kor_co_nm = models.TextField()               # 금융회사명
     fin_prdt_nm = models.TextField()             # 금융상품명

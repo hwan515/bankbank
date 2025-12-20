@@ -1,14 +1,18 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 import requests
-from products.models import DepositProducts, DepositOptions, SavingProducts, SavingOptions
+from products.models import FinancialCompany, DepositProducts, DepositOptions, SavingProducts, SavingOptions
 
 
 class Command(BaseCommand):
-    help = '금융감독원 API에서 예적금 상품 데이터를 가져와 DB에 저장합니다.'
+    help = '금융감독원 API에서 금융회사 및 예적금 상품 데이터를 가져와 DB에 저장합니다.'
 
     def handle(self, *args, **options):
-        self.stdout.write('예적금 데이터 업데이트 시작...')
+        self.stdout.write('금융 데이터 업데이트 시작...')
+
+        # 금융회사 업데이트
+        company_result = self.update_financial_companies()
+        self.stdout.write(self.style.SUCCESS(f'금융회사: {company_result}'))
 
         # 정기예금 업데이트
         deposit_result = self.update_deposit_products()
@@ -18,7 +22,46 @@ class Command(BaseCommand):
         saving_result = self.update_saving_products()
         self.stdout.write(self.style.SUCCESS(f'적금: {saving_result}'))
 
-        self.stdout.write(self.style.SUCCESS('예적금 데이터 업데이트 완료!'))
+        self.stdout.write(self.style.SUCCESS('금융 데이터 업데이트 완료!'))
+
+    def update_financial_companies(self):
+        API_KEY = settings.FIN_API_KEY
+        url = f'http://finlife.fss.or.kr/finlifeapi/companySearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1'
+
+        try:
+            response = requests.get(url)
+            data = response.json()
+            result = data.get('result')
+
+            if not result:
+                return {'error': 'API 응답에 result가 없습니다'}
+
+            base_list = result.get('baseList', [])
+
+        except Exception as e:
+            return {'error': str(e)}
+
+        created_count = 0
+        updated_count = 0
+
+        for company in base_list:
+            fin_co_no = company.get('fin_co_no')
+            _, created = FinancialCompany.objects.update_or_create(
+                fin_co_no=fin_co_no,
+                defaults={
+                    'dcls_month': company.get('dcls_month') or "",
+                    'kor_co_nm': company.get('kor_co_nm') or "",
+                    'dcls_chrg_man': company.get('dcls_chrg_man') or "",
+                    'homp_url': company.get('homp_url') or "",
+                    'cal_tel': company.get('cal_tel') or "",
+                }
+            )
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
+
+        return {'created': created_count, 'updated': updated_count}
 
     def update_deposit_products(self):
         API_KEY = settings.FIN_API_KEY
@@ -46,6 +89,7 @@ class Command(BaseCommand):
             _, created = DepositProducts.objects.update_or_create(
                 fin_prdt_cd=fin_prdt_cd,
                 defaults={
+                    'dcls_month': base.get('dcls_month') or "",
                     'kor_co_nm': base.get('kor_co_nm'),
                     'fin_prdt_nm': base.get('fin_prdt_nm'),
                     'etc_note': base.get('etc_note') or "",
@@ -114,6 +158,7 @@ class Command(BaseCommand):
             _, created = SavingProducts.objects.update_or_create(
                 fin_prdt_cd=fin_prdt_cd,
                 defaults={
+                    'dcls_month': base.get('dcls_month') or "",
                     'kor_co_nm': base.get('kor_co_nm'),
                     'fin_prdt_nm': base.get('fin_prdt_nm'),
                     'etc_note': base.get('etc_note') or "",
