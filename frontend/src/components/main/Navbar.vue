@@ -3,15 +3,15 @@ import { computed } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 // 상태 관리를 위한 Pinia Store 가정 (User Store)
 import { useUserStore } from '@/stores/user';
+import { useAccountStore } from '@/stores/account';
 
 const router = useRouter();
-const userStore = useUserStore();
+const accountStore = useAccountStore();
 
 // 로그인 상태 체크 (보안: 토큰 유무 및 유효성 검증 로직 포함 필요)
-const isLoggedIn = computed(() => userStore.isAuthenticated);
 
 const handleLogout = () => {
-  userStore.logout();
+  accountStore.logout();
   router.push({ name: 'main' });
 };
 
@@ -47,7 +47,7 @@ const menuItems = [
         </ul>
 
         <div class="d-flex gap-2">
-          <template v-if="!isLoggedIn">
+          <template v-if="!accountStore.isLogin">
             <RouterLink :to="{ name: 'login' }" class="btn btn-outline-primary btn-sm">로그인</RouterLink>
             <RouterLink :to="{ name: 'signup' }" class="btn btn-primary btn-sm">회원가입</RouterLink>
           </template>

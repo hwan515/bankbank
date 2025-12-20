@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainView from '../views/MainView.vue'
+import LoginView from '@/views/accounts/LoginView.vue'
+import RegisterView from '@/views/accounts/RegisterView.vue'
+import StockMainView from '@/views/stock/stockMainView.vue'
+import VideoDetailView from '@/views/stock/VideoDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,7 +26,7 @@ const router = createRouter({
     {
       path: '/stocks',
       name: 'stocks',
-      component: { template: '<h1>Stocks</h1>' }
+      component: StockMainView
     },
     {
       path: '/bank-map',
@@ -37,12 +41,12 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: { template: '<h1>Login</h1>' }
+      component: LoginView
     },
     {
       path: '/signup',
       name: 'signup',
-      component: { template: '<h1>Signup</h1>' }
+      component: RegisterView
     },
     {
       path: '/profile',
@@ -53,6 +57,11 @@ const router = createRouter({
       path: '/card-recommendation',
       name: 'card-recommendation',
       component: { template: '<h1>card-recommendation</h1>' }
+    },
+    {
+      path: '/videos/:id',
+      name: 'VideoDetail',
+      component: () => import ('@/views/stock/VideoDetailView.vue')
     }
   ]
 })

@@ -27,10 +27,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+from dotenv import load_dotenv
+import os
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR/".env")
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 # Application definition
 
 INSTALLED_APPS = [
+    'stocks',
     'accounts',
     'rest_framework',
     'rest_framework.authtoken',
