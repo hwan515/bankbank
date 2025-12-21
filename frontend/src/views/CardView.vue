@@ -59,8 +59,8 @@
               <div class="col-md-3">
                 <select v-model="selectedCardType" class="form-select" @change="handleSearch">
                   <option value="">전체 카드</option>
-                  <option value="credit">신용카드</option>
-                  <option value="check">체크카드</option>
+                  <option value="CRD">신용카드</option>
+                  <option value="CHK">체크카드</option>
                 </select>
               </div>
               <div class="col-md-1">
@@ -91,8 +91,8 @@
                 <div class="card-body">
                   <div class="mb-2">
                     <span class="badge bg-secondary me-1">{{ card.company }}</span>
-                    <span class="badge" :class="card.card_type === 'credit' ? 'bg-primary' : 'bg-success'">
-                      {{ card.card_type === 'credit' ? '신용' : '체크' }}
+                    <span class="badge" :class="card.card_type === 'CRD' ? 'bg-primary' : 'bg-success'">
+                      {{ card.card_type === 'CRD' ? '신용' : '체크' }}
                     </span>
                     <span v-if="card.ranking" class="badge bg-warning text-dark ms-1">{{ card.ranking }}위</span>
                   </div>

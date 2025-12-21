@@ -46,7 +46,7 @@
               </li>
               <li class="list-group-item d-flex justify-content-between">
                 <span class="text-muted">카드 종류</span>
-                <strong>{{ card.card_type === 'credit' ? '신용카드' : '체크카드' }}</strong>
+                <strong>{{ card.card_type === 'CRD' ? '신용카드' : '체크카드' }}</strong>
               </li>
               <li class="list-group-item d-flex justify-content-between">
                 <span class="text-muted">연회비</span>
@@ -70,8 +70,8 @@
           <div class="mb-4">
             <div class="d-flex align-items-center gap-2 mb-2">
               <span class="badge bg-secondary">{{ card.company }}</span>
-              <span class="badge" :class="card.card_type === 'credit' ? 'bg-primary' : 'bg-success'">
-                {{ card.card_type === 'credit' ? '신용카드' : '체크카드' }}
+              <span class="badge" :class="card.card_type === 'CRD' ? 'bg-primary' : 'bg-success'">
+                {{ card.card_type === 'CRD' ? '신용카드' : '체크카드' }}
               </span>
               <span v-if="card.category" class="badge bg-info">{{ card.category }}</span>
             </div>
@@ -128,10 +128,10 @@
                     :class="{ show: index === 0 }"
                   >
                     <div class="accordion-body pre-line">
-                      <p v-if="benefit.summary">{{ benefit.summary }}</p>
-                      <p v-if="benefit.detail" class="text-muted small">{{ benefit.detail }}</p>
+                      <p v-if="benefit.summary">{{ decodeHtml(benefit.summary) }}</p>
+                      <p v-if="benefit.detail" class="text-muted small">{{ decodeHtml(benefit.detail) }}</p>
                       <ul v-if="benefit.items && benefit.items.length" class="mb-0">
-                        <li v-for="(item, i) in benefit.items" :key="i">{{ item }}</li>
+                        <li v-for="(item, i) in benefit.items" :key="i">{{ decodeHtml(item) }}</li>
                       </ul>
                     </div>
                   </div>
@@ -217,7 +217,36 @@ function formatSpending(amount) {
 function formatBenefits(text) {
   if (!text) return ''
   // 앞뒤에 공백이 있는 " / "만 줄바꿈으로 변환
-  return text.replace(/\s+\/\s+/g, '\n')
+  return decodeHtml(text).replace(/\s+\/\s+/g, '\n')
+}
+
+function decodeHtml(text) {
+  if (!text) return ''
+  const entities = {
+    '&middot;': '·',
+    '&bull;': '•',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&nbsp;': ' ',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&apos;': "'",
+    '&ndash;': '–',
+    '&mdash;': '—',
+    '&hellip;': '…',
+    '&trade;': '™',
+    '&reg;': '®',
+    '&copy;': '©',
+    '&times;': '×',
+    '&divide;': '÷',
+    '&plusmn;': '±',
+    '&rarr;': '→',
+    '&larr;': '←',
+    '&uarr;': '↑',
+    '&darr;': '↓',
+  }
+  return text.replace(/&[a-zA-Z0-9#]+;/g, match => entities[match] || match)
 }
 
 function getCategoryName(code) {

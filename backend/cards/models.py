@@ -4,14 +4,14 @@ from django.db import models
 class Card(models.Model):
     """신용카드 기본 정보"""
     CARD_TYPE_CHOICES = [
-        ('credit', '신용카드'),
-        ('check', '체크카드'),
+        ('CRD', '신용카드'),
+        ('CHK', '체크카드'),
     ]
 
     gorilla_id = models.IntegerField(unique=True, help_text="카드고릴라 고유 ID")
     name = models.CharField(max_length=200)
     company = models.CharField(max_length=100)
-    card_type = models.CharField(max_length=20, choices=CARD_TYPE_CHOICES, default='credit')
+    card_type = models.CharField(max_length=20, choices=CARD_TYPE_CHOICES, default='CRD')
     annual_fee = models.CharField(max_length=200, blank=True, help_text="연회비 정보")
     min_spending = models.IntegerField(default=0, help_text="전월실적 조건(원)")
 

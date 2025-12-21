@@ -36,7 +36,7 @@ def card_list(request):
 
     # 카드 타입 필터
     card_type = request.query_params.get('card_type', '').strip()
-    if card_type in ['credit', 'check']:
+    if card_type in ['CRD', 'CHK']:
         queryset = queryset.filter(card_type=card_type)
 
     # 정렬: 랭킹 우선, 없으면 최신순
