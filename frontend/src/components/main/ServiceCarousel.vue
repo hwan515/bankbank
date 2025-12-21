@@ -9,7 +9,7 @@ const slides = ref([
     description: "한눈에 비교하는 예적금 금리 비교 서비스",
     image: "https://placehold.co/1200x400/EEE/31343C?text=Banner+1",
     action: "금리 비교하기",
-    route: "deposit-list"
+    route: "products"
   },
   {
     id: 2,
