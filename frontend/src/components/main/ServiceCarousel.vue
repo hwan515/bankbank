@@ -17,7 +17,8 @@ const slides = ref([
     description: "어떤 카드가 당신에게 적합한지 추천받으세요.",
     image: "https://placehold.co/1200x400/EEE/31343C?text=Banner+2",
     action: "추천 받기",
-    route: "card-recommendation"
+    route: "cards",
+    query: { tab: 'recommend' }
   },
   {
     id: 3,
@@ -56,7 +57,7 @@ const slides = ref([
         <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
           <h5 class="fw-bold">{{ slide.title }}</h5>
           <p>{{ slide.description }}</p>
-          <RouterLink :to="{ name: slide.route }" class="btn btn-light btn-sm text-primary fw-bold">
+          <RouterLink :to="{ name: slide.route, query: slide.query }" class="btn btn-light btn-sm text-primary fw-bold">
             {{ slide.action }}
           </RouterLink>
         </div>
