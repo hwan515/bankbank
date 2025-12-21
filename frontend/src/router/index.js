@@ -4,6 +4,8 @@ import ProductsListView from '../views/ProductsListView.vue'
 import DepositDetailView from '../views/DepositDetailView.vue'
 import SavingDetailView from '../views/SavingDetailView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
+import CardView from '../views/CardView.vue'
+import CardDetailView from '../views/CardDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -70,11 +72,16 @@ const router = createRouter({
       component: PlaceholderView,
       props: { title: '프로필' }
     },
+    // 카드 관련 라우트
     {
-      path: '/card-recommendation',
-      name: 'card-recommendation',
-      component: PlaceholderView,
-      props: { title: '카드 추천' }
+      path: '/cards',
+      name: 'cards',
+      component: CardView
+    },
+    {
+      path: '/cards/:id',
+      name: 'card-detail',
+      component: CardDetailView
     }
   ]
 })
