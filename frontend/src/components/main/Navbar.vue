@@ -1,7 +1,6 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
-// 상태 관리를 위한 Pinia Store 가정 (User Store)
 import { useUserStore } from '@/stores/user';
 import { useAccountStore } from '@/stores/account';
 
@@ -10,18 +9,20 @@ const accountStore = useAccountStore();
 
 // 로그인 상태 체크 (보안: 토큰 유무 및 유효성 검증 로직 포함 필요)
 
+const isLoggedIn = computed(() => userStore.isAuthenticated);
+
 const handleLogout = () => {
   accountStore.logout();
   router.push({ name: 'main' });
 };
 
-// 메뉴 구조화 (확장성 고려)
+// 메뉴 항목
 const menuItems = [
-  { name: '예적금 비교', routeName: 'deposit-list' },
+  { name: '예적금 비교', routeName: 'products' },
+  { name: '카드', routeName: 'cards' },
   { name: '현물 상품', routeName: 'commodities' },
   { name: '관심 종목', routeName: 'stocks' },
   { name: '은행 지도', routeName: 'bank-map' },
-  { name: '카드 추천', routeName: 'card-recommendation' },
   { name: '커뮤니티', routeName: 'community' },
 ];
 </script>
@@ -62,7 +63,6 @@ const menuItems = [
 </template>
 
 <style scoped>
-/* 금융 앱 특유의 깔끔하고 신뢰감을 주는 스타일링 */
 .navbar-brand {
   font-family: 'Noto Sans KR', sans-serif;
   letter-spacing: -0.5px;
