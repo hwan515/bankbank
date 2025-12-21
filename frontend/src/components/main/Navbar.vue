@@ -17,7 +17,7 @@ const handleLogout = () => {
 
 // 메뉴 구조화 (확장성 고려)
 const menuItems = [
-  { name: '예적금 비교', routeName: 'deposit-list' },
+  { name: '예적금 비교', routeName: 'products' },
   { name: '현물 상품', routeName: 'commodities' },
   { name: '관심 종목', routeName: 'stocks' },
   { name: '은행 지도', routeName: 'bank-map' },

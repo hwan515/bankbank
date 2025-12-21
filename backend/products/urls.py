@@ -18,6 +18,13 @@ urlpatterns = [
     path('deposit-products/<int:pk>/', views.deposit_product_detail, name='deposit_product_detail'),
     path('saving-products/<int:pk>/', views.saving_product_detail, name='saving_product_detail'),
 
+    # [F03-3] 상품 가입/해제
+    path('deposit-products/<int:pk>/subscribe/', views.subscribe_deposit, name='subscribe_deposit'),
+    path('saving-products/<int:pk>/subscribe/', views.subscribe_saving, name='subscribe_saving'),
+
+    # [F03-3] 가입 여부 확인
+    path('check-subscription/<str:product_type>/<int:pk>/', views.check_subscription, name='check_subscription'),
+
     # 은행 목록 - 추후 지도 개발 때 사용
     path('banks/', views.bank_list, name='bank_list'),
 ]

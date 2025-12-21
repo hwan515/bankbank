@@ -328,3 +328,72 @@ def financial_companies(request):
         'id', 'dcls_month', 'fin_co_no', 'kor_co_nm', 'homp_url', 'cal_tel'
     )
     return Response(list(companies), status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def subscribe_deposit(request, pk):
+    """
+    [F03-3] 정기예금 가입/해제
+    - 이미 가입된 상품이면 해제, 아니면 가입
+    """
+    product = get_object_or_404(DepositProducts, pk=pk)
+    user = request.user
+
+    if product in user.deposit_products.all():
+        user.deposit_products.remove(product)
+        return Response({
+            "message": "상품 가입이 해제되었습니다.",
+            "subscribed": False
+        }, status=status.HTTP_200_OK)
+    else:
+        user.deposit_products.add(product)
+        return Response({
+            "message": "상품에 가입되었습니다.",
+            "subscribed": True
+        }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def subscribe_saving(request, pk):
+    """
+    [F03-3] 적금 가입/해제
+    - 이미 가입된 상품이면 해제, 아니면 가입
+    """
+    product = get_object_or_404(SavingProducts, pk=pk)
+    user = request.user
+
+    if product in user.saving_products.all():
+        user.saving_products.remove(product)
+        return Response({
+            "message": "상품 가입이 해제되었습니다.",
+            "subscribed": False
+        }, status=status.HTTP_200_OK)
+    else:
+        user.saving_products.add(product)
+        return Response({
+            "message": "상품에 가입되었습니다.",
+            "subscribed": True
+        }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_subscription(request, product_type, pk):
+    """
+    [F03-3] 상품 가입 여부 확인
+    - product_type: 'deposit' 또는 'saving'
+    """
+    user = request.user
+
+    if product_type == 'deposit':
+        product = get_object_or_404(DepositProducts, pk=pk)
+        subscribed = product in user.deposit_products.all()
+    elif product_type == 'saving':
+        product = get_object_or_404(SavingProducts, pk=pk)
+        subscribed = product in user.saving_products.all()
+    else:
+        return Response({"error": "Invalid product type"}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({"subscribed": subscribed}, status=status.HTTP_200_OK)

@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainView from '../views/MainView.vue'
+import ProductsListView from '../views/ProductsListView.vue'
+import DepositDetailView from '../views/DepositDetailView.vue'
+import SavingDetailView from '../views/SavingDetailView.vue'
+import PlaceholderView from '../views/PlaceholderView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,49 +14,67 @@ const router = createRouter({
       component: MainView
     },
     {
-      path: '/deposit-list',
-      name: 'deposit-list',
-      component: { template: '<h1>Deposit List</h1>' }
+      path: '/products',
+      name: 'products',
+      component: ProductsListView
+    },
+    {
+      path: '/products/deposit/:id',
+      name: 'deposit-detail',
+      component: DepositDetailView
+    },
+    {
+      path: '/products/saving/:id',
+      name: 'saving-detail',
+      component: SavingDetailView
     },
     {
       path: '/commodities',
       name: 'commodities',
-      component: { template: '<h1>Commodities</h1>' }
+      component: PlaceholderView,
+      props: { title: '현물' }
     },
     {
       path: '/stocks',
       name: 'stocks',
-      component: { template: '<h1>Stocks</h1>' }
+      component: PlaceholderView,
+      props: { title: '주식' }
     },
     {
       path: '/bank-map',
       name: 'bank-map',
-      component: { template: '<h1>Bank Map</h1>' }
+      component: PlaceholderView,
+      props: { title: '은행 지도' }
     },
     {
       path: '/community',
       name: 'community',
-      component: { template: '<h1>Community</h1>' }
+      component: PlaceholderView,
+      props: { title: '커뮤니티' }
     },
     {
       path: '/login',
       name: 'login',
-      component: { template: '<h1>Login</h1>' }
+      component: PlaceholderView,
+      props: { title: '로그인' }
     },
     {
       path: '/signup',
       name: 'signup',
-      component: { template: '<h1>Signup</h1>' }
+      component: PlaceholderView,
+      props: { title: '회원가입' }
     },
     {
       path: '/profile',
       name: 'profile',
-      component: { template: '<h1>Profile</h1>' }
+      component: PlaceholderView,
+      props: { title: '프로필' }
     },
     {
       path: '/card-recommendation',
       name: 'card-recommendation',
-      component: { template: '<h1>card-recommendation</h1>' }
+      component: PlaceholderView,
+      props: { title: '카드 추천' }
     }
   ]
 })
