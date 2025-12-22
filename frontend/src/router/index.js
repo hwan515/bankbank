@@ -10,6 +10,9 @@ import SavingDetailView from '../views/SavingDetailView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 import CardView from '../views/CardView.vue'
 import CardDetailView from '../views/CardDetailView.vue'
+import RoadMap from '@/views/banks/RoadMap.vue'
+import MyPageView from '@/views/accounts/MyPageView.vue'
+import ChartsView from '@/views/charts/chartsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,22 +40,17 @@ const router = createRouter({
     {
       path: '/commodities',
       name: 'commodities',
-      component: PlaceholderView,
-      props: { title: '현물' }
+      component: ChartsView
     },
     {
       path: '/stocks',
       name: 'stocks',
       component: StockMainView,
-
-      component: PlaceholderView,
-      props: { title: '주식' }
     },
     {
       path: '/bank-map',
       name: 'bank-map',
-      component: PlaceholderView,
-      props: { title: '은행 지도' }
+      component: RoadMap,
     },
     {
       path: '/community',
@@ -64,21 +62,16 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
-      component: PlaceholderView,
-      props: { title: '로그인' }
     },
     {
       path: '/signup',
       name: 'signup',
       component: RegisterView,
-      component: PlaceholderView,
-      props: { title: '회원가입' }
     },
     {
       path: '/profile',
       name: 'profile',
-      component: PlaceholderView,
-      props: { title: '프로필' }
+      component: MyPageView
     },
     // 카드 관련 라우트
     {

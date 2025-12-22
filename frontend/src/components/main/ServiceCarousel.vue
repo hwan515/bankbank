@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 const slides = ref([
   {
@@ -28,47 +28,51 @@ const slides = ref([
     action: "지도 보기",
     route: "bank-map"
   }
-]);
+])
 </script>
 
 <template>
-  <div id="serviceCarousel" class="carousel slide" data-bs-ride="carousel">
+  <div id="serviceCarousel" class="carousel slide hero" data-bs-ride="carousel">
     <div class="carousel-indicators">
-      <button 
-        v-for="(slide, index) in slides" 
+      <button
+        v-for="(slide, index) in slides"
         :key="slide.id"
-        type="button" 
-        data-bs-target="#serviceCarousel" 
-        :data-bs-slide-to="index" 
+        type="button"
+        data-bs-target="#serviceCarousel"
+        :data-bs-slide-to="index"
         :class="{ active: index === 0 }"
         :aria-current="index === 0 ? 'true' : undefined"
-        :aria-label="`Slide ${index + 1}`">
-      </button>
+        :aria-label="`Slide ${index + 1}`"
+      />
     </div>
 
-    <div class="carousel-inner rounded-3 shadow-sm">
-      <div 
-        v-for="(slide, index) in slides" 
-        :key="slide.id" 
-        class="carousel-item" 
+    <div class="carousel-inner hero-inner">
+      <div
+        v-for="(slide, index) in slides"
+        :key="slide.id"
+        class="carousel-item"
         :class="{ active: index === 0 }"
-        data-bs-interval="5000"> <img :src="slide.image" class="d-block w-100 carousel-img" :alt="slide.title">
-        
-        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
-          <h5 class="fw-bold">{{ slide.title }}</h5>
-          <p>{{ slide.description }}</p>
-          <RouterLink :to="{ name: slide.route, query: slide.query }" class="btn btn-light btn-sm text-primary fw-bold">
-            {{ slide.action }}
+        data-bs-interval="5000"
+      >
+        <img :src="slide.image" class="d-block w-100 hero-img" :alt="slide.title" />
+
+        <!-- ✅ 미니멀 캡션 -->
+        <div class="hero-overlay"></div>
+        <div class="hero-caption">
+          <div class="hero-title">{{ slide.title }}</div>
+          <div class="hero-desc">{{ slide.description }}</div>
+          <RouterLink :to="{ name: slide.route, query: slide.query }" class="hero-btn">
+            {{ slide.action }} →
           </RouterLink>
         </div>
       </div>
     </div>
 
-    <button class="carousel-control-prev" type="button" data-bs-target="#serviceCarousel" data-bs-slide="prev">
+    <button class="carousel-control-prev ctrl" type="button" data-bs-target="#serviceCarousel" data-bs-slide="prev">
       <span class="carousel-control-prev-icon" aria-hidden="true"></span>
       <span class="visually-hidden">Previous</span>
     </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#serviceCarousel" data-bs-slide="next">
+    <button class="carousel-control-next ctrl" type="button" data-bs-target="#serviceCarousel" data-bs-slide="next">
       <span class="carousel-control-next-icon" aria-hidden="true"></span>
       <span class="visually-hidden">Next</span>
     </button>
@@ -76,9 +80,80 @@ const slides = ref([
 </template>
 
 <style scoped>
-.carousel-img {
-  height: 400px;
-  object-fit: cover; /* 이미지가 찌그러지지 않도록 처리 */
-  filter: brightness(0.9); /* 텍스트 가독성을 위해 살짝 어둡게 */
+.hero {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #efefef;
+  background: #fff;
+}
+
+.hero-inner {
+  border-radius: 16px;
+}
+
+.hero-img {
+  height: 380px;
+  object-fit: cover;
+  filter: saturate(1.02);
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  /* 좌하단 가독성용 그라데이션 */
+  background: linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.00) 70%);
+}
+
+.hero-caption {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  max-width: 520px;
+  color: #fff;
+}
+
+.hero-title {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: rgba(255,255,255,0.88);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  background: rgba(255,255,255,0.92);
+  color: #111;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.hero-btn:hover {
+  background: #fff;
+}
+
+.ctrl {
+  opacity: 0.75;
+}
+.ctrl:hover {
+  opacity: 1;
+}
+
+@media (max-width: 576px) {
+  .hero-img { height: 320px; }
+  .hero-caption { right: 18px; }
+  .hero-title { font-size: 18px; }
 }
 </style>
