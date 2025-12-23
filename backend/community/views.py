@@ -1,8 +1,10 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from django.db.models import Count
 
 from .models import Post, Comment
 from .serializers import (
@@ -10,6 +12,12 @@ from .serializers import (
     PostListSerializer,
     CommentSerializer,
 )
+
+
+class PostPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 100
 
 
 @api_view(["GET", "POST"])
@@ -20,13 +28,19 @@ def post_list_create(request):
         queryset = (
             Post.objects.all()
             .select_related("author")
-            .prefetch_related("comments", "like_users", "dislike_users")
+            .annotate(
+                comment_count=Count("comments", distinct=True),
+                like_count=Count("like_users", distinct=True),
+                dislike_count=Count("dislike_users", distinct=True),
+            )
         )
         if board_type in ["product", "card"]:
             queryset = queryset.filter(board_type=board_type)
 
-        serializer = PostListSerializer(queryset, many=True, context={"request": request})
-        return Response(serializer.data)
+        paginator = PostPagination()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = PostListSerializer(page, many=True, context={"request": request})
+        return paginator.get_paginated_response(serializer.data)
 
     serializer = PostDetailSerializer(data=request.data, context={"request": request})
     if serializer.is_valid():
@@ -40,12 +54,17 @@ def post_list_create(request):
 @permission_classes([IsAuthenticatedOrReadOnly])
 def post_detail(request, pk):
     post = get_object_or_404(
-        Post.objects.select_related("author").prefetch_related(
+        Post.objects.select_related("author")
+        .prefetch_related(
             "like_users",
             "dislike_users",
             "comments__author",
             "comments__like_users",
             "comments__dislike_users",
+        )
+        .annotate(
+            like_count=Count("like_users", distinct=True),
+            dislike_count=Count("dislike_users", distinct=True),
         ),
         pk=pk,
     )

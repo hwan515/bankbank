@@ -114,125 +114,197 @@
 
       <!-- RECOMMEND -->
       <div v-show="activeTab === 'recommend'">
-        <!-- 검색 영역 -->
-        <div class="card shadow-sm mb-4">
-          <div class="card-body p-4">
-            <form @submit.prevent="handleRecommend">
-              <div class="input-group input-group-lg mb-3">
-                <input
-                  v-model="recommendQuery"
-                  type="text"
-                  class="form-control"
-                  placeholder="예: 스타벅스 할인 많은 카드, 주유 혜택 좋은 카드"
-                  :disabled="isLoading"
+        <div class="recommend-tabs">
+          <button
+            class="tab"
+            :class="{ active: recommendMode === 'query' }"
+            @click="recommendMode = 'query'"
+          >
+            <i class="bi bi-stars"></i> 일반 AI 추천
+          </button>
+          <button
+            class="tab"
+            :class="{ active: recommendMode === 'personal' }"
+            @click="recommendMode = 'personal'"
+          >
+            <i class="bi bi-sliders"></i> 내 선호도 추천
+          </button>
+        </div>
+
+        <!-- 일반 추천 -->
+        <div v-show="recommendMode === 'query'">
+          <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+              <form @submit.prevent="handleRecommend">
+                <div class="input-group input-group-lg mb-3">
+                  <input
+                    v-model="recommendQuery"
+                    type="text"
+                    class="form-control"
+                    placeholder="예: 스타벅스 할인 많은 카드, 주유 혜택 좋은 카드"
+                    :disabled="isLoading"
+                  />
+                  <button type="submit" class="btn btn-primary px-4" :disabled="isLoading || !recommendQuery.trim()">
+                    <span v-if="isLoading && activeTab === 'recommend'" class="spinner-border spinner-border-sm me-2"></span>
+                    {{ isLoading && activeTab === 'recommend' ? '검색 중...' : '추천받기' }}
+                  </button>
+                </div>
+
+                <!-- 필터 옵션 (접이식) -->
+                <div class="mb-3">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    @click="showFilters = !showFilters"
+                  >
+                    <i class="bi" :class="showFilters ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                    필터 옵션 {{ showFilters ? '접기' : '펼치기' }}
+                  </button>
+                </div>
+
+                <div v-show="showFilters" class="row g-3 mb-3">
+                  <div class="col-md-3">
+                    <label class="form-label small text-muted">카드사</label>
+                    <select v-model="recFilters.company" class="form-select form-select-sm">
+                      <option value="">전체</option>
+                      <option v-for="c in companies" :key="c" :value="c">{{ c }}</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small text-muted">카드 종류</label>
+                    <select v-model="recFilters.card_type" class="form-select form-select-sm">
+                      <option value="">전체</option>
+                      <option value="CRD">신용카드</option>
+                      <option value="CHK">체크카드</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small text-muted">연회비 상한</label>
+                    <select v-model="recFilters.max_annual_fee" class="form-select form-select-sm">
+                      <option :value="null">제한 없음</option>
+                      <option :value="0">무료</option>
+                      <option :value="10000">1만원 이하</option>
+                      <option :value="20000">2만원 이하</option>
+                      <option :value="50000">5만원 이하</option>
+                      <option :value="100000">10만원 이하</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small text-muted">전월실적 상한</label>
+                    <select v-model="recFilters.max_min_spending" class="form-select form-select-sm">
+                      <option :value="null">제한 없음</option>
+                      <option :value="0">조건 없음</option>
+                      <option :value="300000">30만원 이하</option>
+                      <option :value="500000">50만원 이하</option>
+                      <option :value="1000000">100만원 이하</option>
+                    </select>
+                  </div>
+                </div>
+              </form>
+
+              <div class="examples">
+                <div class="examples-title">추천 질문</div>
+                <div class="chips">
+                  <button
+                    v-for="example in exampleQueries"
+                    :key="example"
+                    class="chip"
+                    @click="setRecommendQuery(example)"
+                    :disabled="isLoading"
+                  >
+                    {{ example }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 에러 -->
+          <div v-if="error && activeTab === 'recommend'" class="alert alert-danger">{{ error }}</div>
+
+          <!-- 로딩 -->
+          <LoadingSpinner
+            v-if="isLoading && activeTab === 'recommend'"
+            message="AI가 최적의 카드를 찾고 있습니다..."
+          />
+
+          <!-- 추천 결과 -->
+          <div v-else-if="recommendedCards.length > 0">
+            <div class="result-head">
+              <span class="badge primary">{{ recommendedCards.length }}</span>
+              <span class="result-text">"{{ lastQuery }}" 검색 결과</span>
+            </div>
+
+            <div class="row g-4">
+              <div v-for="(result, index) in recommendedCards" :key="result.card.gorilla_id" class="col-12">
+                <CardListItem
+                  variant="recommend"
+                  :card="result.card"
+                  :recommendation="{ ...result, index }"
+                  @clicked="goToDetail(result.card.id)"
                 />
-                <button type="submit" class="btn btn-primary px-4" :disabled="isLoading || !recommendQuery.trim()">
-                  <span v-if="isLoading && activeTab === 'recommend'" class="spinner-border spinner-border-sm me-2"></span>
-                  {{ isLoading && activeTab === 'recommend' ? '검색 중...' : '추천받기' }}
-                </button>
               </div>
+            </div>
+          </div>
 
-              <!-- 필터 옵션 (접이식) -->
-              <div class="mb-3">
-                <button
-                  type="button"
-                  class="btn btn-sm btn-outline-secondary"
-                  @click="showFilters = !showFilters"
-                >
-                  <i class="bi" :class="showFilters ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-                  필터 옵션 {{ showFilters ? '접기' : '펼치기' }}
-                </button>
+          <!-- 검색 전 -->
+          <div v-else-if="!lastQuery" class="empty">
+            <div class="empty-title">AI 추천을 받아보세요</div>
+            <div class="empty-sub">위 검색창에 원하는 카드 혜택을 입력해보세요.</div>
+          </div>
+        </div>
+
+        <!-- 개인화 추천 -->
+        <div v-show="recommendMode === 'personal'">
+          <div class="card shadow-sm mb-4">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <div>
+                <div class="title-sm">내 선호도로 추천 받기</div>
+                <p class="sub-sm mb-0">마이페이지에 저장한 카테고리 가중치, 연회비/실적 허용치를 그대로 사용해요.</p>
               </div>
-
-              <div v-show="showFilters" class="row g-3 mb-3">
-                <div class="col-md-3">
-                  <label class="form-label small text-muted">카드사</label>
-                  <select v-model="recFilters.company" class="form-select form-select-sm">
-                    <option value="">전체</option>
-                    <option v-for="c in companies" :key="c" :value="c">{{ c }}</option>
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label small text-muted">카드 종류</label>
-                  <select v-model="recFilters.card_type" class="form-select form-select-sm">
-                    <option value="">전체</option>
-                    <option value="CRD">신용카드</option>
-                    <option value="CHK">체크카드</option>
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label small text-muted">연회비 상한</label>
-                  <select v-model="recFilters.max_annual_fee" class="form-select form-select-sm">
-                    <option :value="null">제한 없음</option>
-                    <option :value="0">무료</option>
-                    <option :value="10000">1만원 이하</option>
-                    <option :value="20000">2만원 이하</option>
-                    <option :value="50000">5만원 이하</option>
-                    <option :value="100000">10만원 이하</option>
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label small text-muted">전월실적 상한</label>
-                  <select v-model="recFilters.max_min_spending" class="form-select form-select-sm">
-                    <option :value="null">제한 없음</option>
-                    <option :value="0">조건 없음</option>
-                    <option :value="300000">30만원 이하</option>
-                    <option :value="500000">50만원 이하</option>
-                    <option :value="1000000">100만원 이하</option>
-                  </select>
-                </div>
-              </div>
-            </form>
-
-            <div class="examples">
-              <div class="examples-title">추천 질문</div>
-              <div class="chips">
-                <button
-                  v-for="example in exampleQueries"
-                  :key="example"
-                  class="chip"
-                  @click="setRecommendQuery(example)"
-                  :disabled="isLoading"
-                >
-                  {{ example }}
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" @click="goToPreference">선호도 수정</button>
+                <button class="btn btn-primary" :disabled="personalLoading" @click="handlePersonalRecommend">
+                  <span v-if="personalLoading" class="spinner-border spinner-border-sm me-2"></span>
+                  {{ personalLoading ? '불러오는 중...' : '추천 받기' }}
                 </button>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 에러 -->
-        <div v-if="error && activeTab === 'recommend'" class="alert alert-danger">{{ error }}</div>
+          <div v-if="personalError" class="alert alert-warning">{{ personalError }}</div>
 
-        <!-- 로딩 -->
-        <LoadingSpinner
-          v-if="isLoading && activeTab === 'recommend'"
-          message="AI가 최적의 카드를 찾고 있습니다..."
-        />
+          <LoadingSpinner
+            v-if="personalLoading"
+            message="내 선호도로 맞춤 카드를 찾고 있어요..."
+          />
 
-        <!-- 추천 결과 -->
-        <div v-else-if="recommendedCards.length > 0">
-          <div class="result-head">
-            <span class="badge primary">{{ recommendedCards.length }}</span>
-            <span class="result-text">"{{ lastQuery }}" 검색 결과</span>
-          </div>
+          <div v-else-if="personalizedRecommendations.length > 0">
+            <div class="result-head">
+              <span class="badge primary">{{ personalizedRecommendations.length }}</span>
+              <span class="result-text">내 선호도 기반 추천</span>
+            </div>
 
-          <div class="row g-4">
-            <div v-for="(result, index) in recommendedCards" :key="result.card.gorilla_id" class="col-12">
-              <CardListItem
-                variant="recommend"
-                :card="result.card"
-                :recommendation="{ ...result, index }"
-                @clicked="goToDetail(result.card.id)"
-              />
+            <div class="row g-4">
+              <div
+                v-for="(result, index) in personalizedRecommendations"
+                :key="result.card.gorilla_id || result.card.id || index"
+                class="col-12"
+              >
+                <CardListItem
+                  variant="recommend"
+                  :card="result.card"
+                  :recommendation="{ ...result, index }"
+                  @clicked="goToDetail(result.card.id)"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 검색 전 -->
-        <div v-else-if="!lastQuery" class="empty">
-          <div class="empty-title">AI 추천을 받아보세요</div>
-          <div class="empty-sub">위 검색창에 원하는 카드 혜택을 입력해보세요.</div>
+          <div v-else class="empty">
+            <div class="empty-title">내 선호도로 추천을 받아보세요</div>
+            <div class="empty-sub">버튼을 눌러 맞춤 추천을 불러오거나, 선호도를 먼저 설정하세요.</div>
+          </div>
         </div>
       </div>
 
@@ -254,13 +326,26 @@ import api from '@/stores/api'
 const router = useRouter()
 const route = useRoute()
 const cardsStore = useCardsStore()
-const { cards, companies, recommendedCards, isLoading, error, lastQuery, pagination } = storeToRefs(cardsStore)
+const {
+  cards,
+  companies,
+  recommendedCards,
+  personalizedRecommendations,
+  isLoading,
+  error,
+  lastQuery,
+  pagination
+} = storeToRefs(cardsStore)
 const { formatScore, getRankBadgeClass, getScoreClass, getCardTypeBadgeClass } = useCardUtils()
 
 const activeTab = ref(route.query.tab === 'recommend' ? 'recommend' : 'search')
+const recommendMode = ref(route.query.mode === 'personal' ? 'personal' : 'query')
 
 watch(() => route.query.tab, (newTab) => {
   activeTab.value = newTab === 'recommend' ? 'recommend' : 'search'
+})
+watch(() => route.query.mode, (mode) => {
+  recommendMode.value = mode === 'personal' ? 'personal' : 'query'
 })
 
 const searchQuery = ref('')
@@ -277,6 +362,8 @@ const recFilters = ref({
   max_annual_fee: null,
   max_min_spending: null
 })
+const personalLoading = ref(false)
+const personalError = ref('')
 
 const exampleQueries = ['스타벅스 할인', '주유 혜택', '온라인 쇼핑', '해외여행', '대중교통', '영화 할인']
 
@@ -364,6 +451,22 @@ async function handleRecommend() {
   }
 }
 
+async function handlePersonalRecommend() {
+  personalLoading.value = true
+  personalError.value = ''
+  try {
+    await cardsStore.getPersonalizedRecommendations({ k: 5 })
+  } catch (err) {
+    personalError.value = err?.response?.data?.detail || '선호도 기반 추천을 불러오는 중 오류가 발생했습니다.'
+  } finally {
+    personalLoading.value = false
+  }
+}
+
+function goToPreference() {
+  router.push({ name: 'profile' })
+}
+
 // 공통 함수
 function goToDetail(cardId) {
   if (cardId) router.push({ name: 'card-detail', params: { id: cardId } })
@@ -428,6 +531,15 @@ function goToDetail(cardId) {
   color: #fff;
 }
 .tab i { font-size: 14px; }
+.recommend-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.recommend-tabs .tab {
+  flex: 1;
+  height: 44px;
+}
 
 /* 박스 */
 .box {

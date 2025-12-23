@@ -46,8 +46,8 @@ export function formatSpending(amount) {
 
 // 추천 점수 포맷팅
 export function formatScore(score) {
-  const similarity = Math.max(0, Math.min(100, (1 - score / 2) * 100))
-  return similarity.toFixed(0) + '%'
+  const normalized = Math.max(0, Math.min(1, Number(score) || 0))
+  return (normalized * 100).toFixed(0) + '%'
 }
 
 // 순위 뱃지 클래스
@@ -60,9 +60,9 @@ export function getRankBadgeClass(index) {
 
 // 점수 색상 클래스
 export function getScoreClass(score) {
-  if (score < 0.5) return 'text-success'
-  if (score < 1.0) return 'text-primary'
-  return 'text-warning'
+  if (score >= 0.8) return 'text-warning'
+  if (score >= 0.6) return 'text-primary'
+  return 'text-success'
 }
 
 // 카드 타입 라벨
