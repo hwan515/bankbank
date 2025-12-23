@@ -49,6 +49,11 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 DATA_GO_KR_KEY = os.getenv("DATA_GO_KR_KEY")
 # Application definition
 
+METAL_PRICE_FILES = {
+    "gold": BASE_DIR / "data" / "Gold_prices.xlsx",
+    "silver": BASE_DIR / "data" / "Silver_prices.xlsx",
+}
+
 INSTALLED_APPS = [
     'stocks',
     'accounts',
@@ -56,6 +61,8 @@ INSTALLED_APPS = [
     'banks',
     'cards',
     'community',
+    'chats',
+    'charts',
     'rest_framework',
     'rest_framework.authtoken',
     'dj_rest_auth',
@@ -71,6 +78,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
+
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -110,6 +119,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "card_project.wsgi.application"
 
+CHANNEL_LAYERS = {
+    "default" : {
+        "BACKEND" : "channels_redis.core.RedisChannelLayer",
+        "CONFIG" : {"hosts" : [("127.0.0.1", 6379)]},
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases

@@ -28,6 +28,8 @@ urlpatterns = [
     path('cards/', include('cards.urls')),
     path("api/", include("banks.urls")),
     path('api/accounts/', include('accounts.urls')),
-    path('api/charts/', include('charts.urls')),
     path('api/community/', include('community.urls')),
+    path('api/metals/', include('charts.urls')),
+    path("api/chat/", include("chats.urls")),
 ]
+
