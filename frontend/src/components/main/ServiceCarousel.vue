@@ -79,6 +79,39 @@ const slides = ref([
   </div>
 </template>
 
+<script setup>
+import { ref } from 'vue';
+import { RouterLink } from 'vue-router';
+
+const slides = ref([
+  {
+    id: 1,
+    title: "현명한 자산 관리의 시작",
+    description: "한눈에 비교하는 예적금 금리 비교 서비스",
+    image: "https://placehold.co/1200x400/EEE/31343C?text=Banner+1",
+    action: "금리 비교하기",
+    route: "products"
+  },
+  {
+    id: 2,
+    title: "AI 기반 카드 추천",
+    description: "어떤 카드가 당신에게 적합한지 추천받으세요.",
+    image: "https://placehold.co/1200x400/EEE/31343C?text=Banner+2",
+    action: "추천 받기",
+    route: "cards",
+    query: { tab: 'recommend' }
+  },
+  {
+    id: 3,
+    title: "내 주변 은행 찾기",
+    description: "가까운 은행 지점과 경로를 안내해드립니다.",
+    image: "https://placehold.co/1200x400/EEE/31343C?text=Banner+3",
+    action: "지도 보기",
+    route: "bank-map"
+  }
+]);
+</script>
+
 <style scoped>
 .hero {
   border-radius: 16px;

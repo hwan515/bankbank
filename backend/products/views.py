@@ -215,12 +215,27 @@ def save_saving_products(request):
 @api_view(['GET'])
 def deposit_products(request):
     """
-    정기예금 상품 목록 조회
+    정기예금 상품 목록 조회 (최적화)
     - 은행(금융회사)별 필터: ?bank=우리은행
     - 상품명 검색: ?search=정기예금
     - 정렬: ?ordering=intr_rate_12 (6, 12, 24, 36개월 금리 기준)
     """
-    products = DepositProducts.objects.prefetch_related('options').all()
+    from django.db.models import Subquery, OuterRef, F
+
+    products = DepositProducts.objects.all()
+
+    # 기간별 최고 우대금리를 Subquery로 정의
+    rate_subqueries = {}
+    for term in [6, 12, 24, 36]:
+        rate_subqueries[f'intr_rate_{term}'] = Subquery(
+            DepositOptions.objects.filter(
+                product=OuterRef('pk'),
+                save_trm=term
+            ).order_by('-intr_rate2')
+            .values('intr_rate2')[:1]
+        )
+
+    products = products.annotate(**rate_subqueries)
 
     # 은행(금융회사)별 필터
     bank = request.query_params.get('bank')
@@ -235,14 +250,7 @@ def deposit_products(request):
     # 정렬 (금리 기준)
     ordering = request.query_params.get('ordering')
     if ordering in ['intr_rate_6', 'intr_rate_12', 'intr_rate_24', 'intr_rate_36']:
-        term = int(ordering.split('_')[-1])
-        # 해당 기간 옵션이 있는 상품만 필터링 후 금리 순 정렬
-        products = products.filter(options__save_trm=term).distinct()
-        products = sorted(
-            products,
-            key=lambda p: p.options.filter(save_trm=term).first().intr_rate2 or 0 if p.options.filter(save_trm=term).exists() else 0,
-            reverse=True
-        )
+        products = products.order_by(F(ordering).desc(nulls_last=True))
 
     serializer = DepositProductsListSerializer(products, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -251,12 +259,27 @@ def deposit_products(request):
 @api_view(['GET'])
 def saving_products(request):
     """
-    적금 상품 목록 조회
+    적금 상품 목록 조회 (최적화)
     - 은행(금융회사)별 필터: ?bank=우리은행
     - 상품명 검색: ?search=적금
     - 정렬: ?ordering=intr_rate_12 (6, 12, 24, 36개월 금리 기준)
     """
-    products = SavingProducts.objects.prefetch_related('saving_options').all()
+    from django.db.models import Subquery, OuterRef, F
+
+    products = SavingProducts.objects.all()
+
+    # 기간별 최고 우대금리를 Subquery로 정의
+    rate_subqueries = {}
+    for term in [6, 12, 24, 36]:
+        rate_subqueries[f'intr_rate_{term}'] = Subquery(
+            SavingOptions.objects.filter(
+                product=OuterRef('pk'),
+                save_trm=term
+            ).order_by('-intr_rate2')
+            .values('intr_rate2')[:1]
+        )
+    
+    products = products.annotate(**rate_subqueries)
 
     # 은행(금융회사)별 필터
     bank = request.query_params.get('bank')
@@ -271,13 +294,7 @@ def saving_products(request):
     # 정렬 (금리 기준)
     ordering = request.query_params.get('ordering')
     if ordering in ['intr_rate_6', 'intr_rate_12', 'intr_rate_24', 'intr_rate_36']:
-        term = int(ordering.split('_')[-1])
-        products = products.filter(saving_options__save_trm=term).distinct()
-        products = sorted(
-            products,
-            key=lambda p: p.saving_options.filter(save_trm=term).first().intr_rate2 or 0 if p.saving_options.filter(save_trm=term).exists() else 0,
-            reverse=True
-        )
+        products = products.order_by(F(ordering).desc(nulls_last=True))
 
     serializer = SavingProductsListSerializer(products, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)

@@ -1,11 +1,7 @@
 <template>
-  <div class="page">
-    <div class="container py-4">
-      <!-- 로딩 -->
-      <div v-if="isLoading" class="state">
-        <div class="spinner-border" style="width: 2.6rem; height: 2.6rem;"></div>
-        <p class="state-sub">카드 정보를 불러오는 중...</p>
-      </div>
+  <div class="container py-5">
+    <!-- 로딩 -->
+    <LoadingSpinner v-if="isLoading" message="카드 정보를 불러오는 중..." />
 
       <!-- 에러 -->
       <div v-else-if="error" class="state">
@@ -18,65 +14,59 @@
         <!-- 뒤로 가기 -->
         <button class="btn-mini ghost mb-3" @click="$router.back()">← 목록으로</button>
 
-        <div class="layout">
-          <!-- 왼쪽 -->
-          <div class="left">
-            <!-- 이미지 -->
-            <div class="box">
-              <div class="box-body img-area">
-                <img
-                  :src="card.image_url"
-                  :alt="card.name"
-                  class="card-img"
-                  @error="handleImageError"
-                />
-              </div>
-            </div>
-
-            <!-- 기본 정보 -->
-            <div class="box mt">
-              <div class="box-head">
-                <div class="box-title">기본 정보</div>
-              </div>
-
-              <div class="kv">
-                <div class="kv-row">
-                  <span class="k">카드사</span>
-                  <strong class="v">{{ card.company }}</strong>
-                </div>
-                <div class="kv-row">
-                  <span class="k">카드 종류</span>
-                  <strong class="v">{{ card.card_type === 'CRD' ? '신용카드' : '체크카드' }}</strong>
-                </div>
-                <div class="kv-row">
-                  <span class="k">연회비</span>
-                  <strong class="v">{{ card.annual_fee || '정보 없음' }}</strong>
-                </div>
-                <div class="kv-row">
-                  <span class="k">전월실적</span>
-                  <strong class="v">{{ formatSpending(card.min_spending) }}</strong>
-                </div>
-                <div v-if="card.ranking" class="kv-row">
-                  <span class="k">인기 순위</span>
-                  <strong class="v rank">{{ card.ranking }}위</strong>
-                </div>
-              </div>
+      <div class="row g-5">
+        <!-- 왼쪽: 카드 이미지 -->
+        <div class="col-lg-5">
+          <div class="card shadow">
+            <div class="card-body text-center p-5 bg-light">
+              <CardImage
+                :src="card.image_url"
+                :alt="card.name"
+                img-style="max-height: 300px; object-fit: contain;"
+              />
             </div>
           </div>
 
-          <!-- 오른쪽 -->
-          <div class="right">
-            <!-- 헤더 -->
-            <div class="header">
-              <div class="badges">
-                <span class="badge">{{ card.company }}</span>
-                <span class="badge" :class="card.card_type === 'CRD' ? 'primary' : 'success'">
-                  {{ card.card_type === 'CRD' ? '신용카드' : '체크카드' }}
-                </span>
-                <span v-if="card.category" class="badge subtle">{{ card.category }}</span>
-              </div>
+          <!-- 기본 정보 카드 -->
+          <div class="card shadow mt-4">
+            <div class="card-header bg-white">
+              <h5 class="mb-0">기본 정보</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="text-muted">카드사</span>
+                <strong>{{ card.company }}</strong>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="text-muted">카드 종류</span>
+                <strong>{{ getCardTypeLabel(card.card_type) }}</strong>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="text-muted">연회비</span>
+                <strong>{{ card.annual_fee || '정보 없음' }}</strong>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="text-muted">전월실적</span>
+                <strong>{{ formatSpending(card.min_spending) }}</strong>
+              </li>
+              <li v-if="card.ranking" class="list-group-item d-flex justify-content-between">
+                <span class="text-muted">인기 순위</span>
+                <strong class="text-warning">{{ card.ranking }}위</strong>
+              </li>
+            </ul>
+          </div>
+        </div>
 
-              <h1 class="h1">{{ card.name }}</h1>
+        <!-- 오른쪽: 카드 정보 -->
+        <div class="col-lg-7">
+          <!-- 카드명 -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-secondary">{{ card.company }}</span>
+              <span class="badge" :class="getCardTypeBadgeClass(card.card_type)">
+                {{ getCardTypeLabel(card.card_type) }}
+              </span>
+              <span v-if="card.category" class="badge bg-info">{{ card.category }}</span>
             </div>
 
             <!-- 주요 혜택 -->
@@ -175,16 +165,21 @@ import { onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCardsStore } from '@/stores/cards'
 import { storeToRefs } from 'pinia'
+import { useCardUtils } from '@/composables/useCardUtils'
+import LoadingSpinner from '@/components/shared/LoadingSpinner.vue'
+import CardImage from '@/components/shared/CardImage.vue'
 
 const route = useRoute()
 const cardsStore = useCardsStore()
 const { currentCard: card, isLoading, error } = storeToRefs(cardsStore)
-
-const categoryMap = {
-  'TRANS': '교통','COMM': '통신','SHOP': '쇼핑','COFFEE': '카페','FOOD': '외식','GAS': '주유',
-  'UTIL': '공과금','SUB': '구독','PAY': '페이','MOVIE': '영화','TRAVEL': '여행','ONLINE': '온라인',
-  'MART': '마트','BEAUTY': '뷰티','HEALTH': '건강','EDU': '교육','ETC': '기타'
-}
+const {
+  decodeHtml,
+  formatBenefits,
+  formatSpending,
+  getCardTypeLabel,
+  getCardTypeBadgeClass,
+  getCategoryName
+} = useCardUtils()
 
 onMounted(async () => {
   const cardId = route.params.id
@@ -194,35 +189,6 @@ onMounted(async () => {
 onUnmounted(() => {
   cardsStore.clearCurrentCard()
 })
-
-function formatSpending(amount) {
-  if (!amount || amount === 0) return '조건 없음'
-  return `${(amount / 10000).toLocaleString()}만원 이상`
-}
-
-function formatBenefits(text) {
-  if (!text) return ''
-  return decodeHtml(text).replace(/\s+\/\s+/g, '\n')
-}
-
-function decodeHtml(text) {
-  if (!text) return ''
-  const entities = {
-    '&middot;': '·','&bull;': '•','&amp;': '&','&lt;': '<','&gt;': '>','&nbsp;': ' ',
-    '&quot;': '"','&#39;': "'",'&apos;': "'",'&ndash;': '–','&mdash;': '—','&hellip;': '…',
-    '&trade;': '™','&reg;': '®','&copy;': '©','&times;': '×','&divide;': '÷','&plusmn;': '±',
-    '&rarr;': '→','&larr;': '←','&uarr;': '↑','&darr;': '↓',
-  }
-  return text.replace(/&[a-zA-Z0-9#]+;/g, m => entities[m] || m)
-}
-
-function getCategoryName(code) {
-  return categoryMap[code] || code || '기타'
-}
-
-function handleImageError(event) {
-  event.target.src = 'https://placehold.co/300x200/f8f9fa/999?text=No+Image'
-}
 </script>
 
 <style scoped>

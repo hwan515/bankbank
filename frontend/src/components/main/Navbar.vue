@@ -60,6 +60,32 @@ const menuItems = [
   </nav>
 </template>
 
+<script setup>
+import { computed } from 'vue';
+import { useRouter, RouterLink } from 'vue-router';
+import { useUserStore } from '@/stores/user';
+
+const router = useRouter();
+const userStore = useUserStore();
+
+const isLoggedIn = computed(() => userStore.isAuthenticated);
+
+const handleLogout = () => {
+  userStore.logout();
+  router.push({ name: 'main' });
+};
+
+// 메뉴 항목
+const menuItems = [
+  { name: '예적금 비교', routeName: 'products' },
+  { name: '카드', routeName: 'cards' },
+  { name: '현물 상품', routeName: 'commodities' },
+  { name: '관심 종목', routeName: 'stocks' },
+  { name: '은행 지도', routeName: 'bank-map' },
+  { name: '커뮤니티', routeName: 'community' },
+];
+</script>
+
 <style scoped>
 /* 유리 느낌 + 미니멀 */
 .app-nav {

@@ -18,35 +18,16 @@ class DepositProductsSerializer(serializers.ModelSerializer):
 
 
 class DepositProductsListSerializer(serializers.ModelSerializer):
-    """목록 조회용 - 기간별 금리 포함"""
-    intr_rate_6 = serializers.SerializerMethodField()
-    intr_rate_12 = serializers.SerializerMethodField()
-    intr_rate_24 = serializers.SerializerMethodField()
-    intr_rate_36 = serializers.SerializerMethodField()
+    """목록 조회용 - 기간별 금리 포함 (최적화)"""
+    intr_rate_6 = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+    intr_rate_12 = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+    intr_rate_24 = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+    intr_rate_36 = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
         model = DepositProducts
         fields = ['id', 'dcls_month', 'fin_prdt_cd', 'kor_co_nm', 'fin_prdt_nm',
                   'intr_rate_6', 'intr_rate_12', 'intr_rate_24', 'intr_rate_36']
-
-    def _get_rate_by_term(self, obj, term):
-        """특정 기간의 금리 반환 (최고 우대금리 우선)"""
-        option = obj.options.filter(save_trm=term).first()
-        if option:
-            return option.intr_rate2 or option.intr_rate
-        return None
-
-    def get_intr_rate_6(self, obj):
-        return self._get_rate_by_term(obj, 6)
-
-    def get_intr_rate_12(self, obj):
-        return self._get_rate_by_term(obj, 12)
-
-    def get_intr_rate_24(self, obj):
-        return self._get_rate_by_term(obj, 24)
-
-    def get_intr_rate_36(self, obj):
-        return self._get_rate_by_term(obj, 36)
 
 
 class SavingOptionsSerializer(serializers.ModelSerializer):
@@ -65,32 +46,13 @@ class SavingProductsSerializer(serializers.ModelSerializer):
 
 
 class SavingProductsListSerializer(serializers.ModelSerializer):
-    """목록 조회용 - 기간별 금리 포함"""
-    intr_rate_6 = serializers.SerializerMethodField()
-    intr_rate_12 = serializers.SerializerMethodField()
-    intr_rate_24 = serializers.SerializerMethodField()
-    intr_rate_36 = serializers.SerializerMethodField()
+    """목록 조회용 - 기간별 금리 포함 (최적화)"""
+    intr_rate_6 = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+    intr_rate_12 = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+    intr_rate_24 = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+    intr_rate_36 = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
         model = SavingProducts
         fields = ['id', 'dcls_month', 'fin_prdt_cd', 'kor_co_nm', 'fin_prdt_nm',
                   'intr_rate_6', 'intr_rate_12', 'intr_rate_24', 'intr_rate_36']
-
-    def _get_rate_by_term(self, obj, term):
-        """특정 기간의 금리 반환 (최고 우대금리 우선)"""
-        option = obj.saving_options.filter(save_trm=term).first()
-        if option:
-            return option.intr_rate2 or option.intr_rate
-        return None
-
-    def get_intr_rate_6(self, obj):
-        return self._get_rate_by_term(obj, 6)
-
-    def get_intr_rate_12(self, obj):
-        return self._get_rate_by_term(obj, 12)
-
-    def get_intr_rate_24(self, obj):
-        return self._get_rate_by_term(obj, 24)
-
-    def get_intr_rate_36(self, obj):
-        return self._get_rate_by_term(obj, 36)

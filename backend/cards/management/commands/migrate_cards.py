@@ -6,13 +6,13 @@ from cards.models import Card
 
 
 class Command(BaseCommand):
-    help = 'capstone_project의 SQLite cards_card 테이블을 MySQL로 마이그레이션'
+    help = 'capstone_project의 SQLite cards 테이블을 MySQL로 마이그레이션'
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--source-db',
-            default='../../capstone_project/backend/db.sqlite3',
-            help='SQLite DB 경로 (기본: ../../capstone_project/backend/db.sqlite3)'
+            default='../analyze_card/card_gorilla_master.db',
+            help='SQLite DB 경로 (기본: ../analyze_card/card_gorilla_master.db)'
         )
         parser.add_argument(
             '--limit',
@@ -39,7 +39,7 @@ class Command(BaseCommand):
             cursor = conn.cursor()
 
             # 카드 데이터 조회
-            query = 'SELECT * FROM cards_card ORDER BY ranking ASC NULLS LAST, id ASC'
+            query = 'SELECT * FROM cards ORDER BY ranking ASC NULLS LAST, id ASC'
             if limit > 0:
                 query += f' LIMIT {limit}'
 

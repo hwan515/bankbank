@@ -73,7 +73,7 @@ export const useCardsStore = defineStore('cards', () => {
   }
 
   // AI 카드 추천
-  async function getRecommendations(query, k = 5) {
+  async function getRecommendations(query, k = 5, filters = {}) {
     isLoading.value = true
     error.value = null
     lastQuery.value = query
@@ -81,9 +81,11 @@ export const useCardsStore = defineStore('cards', () => {
     try {
       const response = await api.post('/cards/card-recommendation/', {
         query,
-        k
+        k,
+        ...filters
       })
-      recommendedCards.value = response.data
+      // 응답 형식에 따라 처리
+      recommendedCards.value = response.data.results || response.data
       return response.data
     } catch (err) {
       error.value = err.message || '추천을 가져오는 중 오류가 발생했습니다.'
