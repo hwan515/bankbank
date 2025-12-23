@@ -1,10 +1,7 @@
 <template>
   <div class="container py-5">
     <!-- 로딩 -->
-    <div v-if="isLoading" class="text-center py-5">
-      <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
-      <p class="mt-3 text-muted">카드 정보를 불러오는 중...</p>
-    </div>
+    <LoadingSpinner v-if="isLoading" message="카드 정보를 불러오는 중..." />
 
     <!-- 에러 -->
     <div v-else-if="error" class="text-center py-5">
@@ -24,12 +21,10 @@
         <div class="col-lg-5">
           <div class="card shadow">
             <div class="card-body text-center p-5 bg-light">
-              <img
+              <CardImage
                 :src="card.image_url"
                 :alt="card.name"
-                class="img-fluid"
-                style="max-height: 300px; object-fit: contain;"
-                @error="handleImageError"
+                img-style="max-height: 300px; object-fit: contain;"
               />
             </div>
           </div>
@@ -46,7 +41,7 @@
               </li>
               <li class="list-group-item d-flex justify-content-between">
                 <span class="text-muted">카드 종류</span>
-                <strong>{{ card.card_type === 'CRD' ? '신용카드' : '체크카드' }}</strong>
+                <strong>{{ getCardTypeLabel(card.card_type) }}</strong>
               </li>
               <li class="list-group-item d-flex justify-content-between">
                 <span class="text-muted">연회비</span>
@@ -70,8 +65,8 @@
           <div class="mb-4">
             <div class="d-flex align-items-center gap-2 mb-2">
               <span class="badge bg-secondary">{{ card.company }}</span>
-              <span class="badge" :class="card.card_type === 'CRD' ? 'bg-primary' : 'bg-success'">
-                {{ card.card_type === 'CRD' ? '신용카드' : '체크카드' }}
+              <span class="badge" :class="getCardTypeBadgeClass(card.card_type)">
+                {{ getCardTypeLabel(card.card_type) }}
               </span>
               <span v-if="card.category" class="badge bg-info">{{ card.category }}</span>
             </div>
@@ -171,34 +166,25 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCardsStore } from '@/stores/cards'
 import { storeToRefs } from 'pinia'
+import { useCardUtils } from '@/composables/useCardUtils'
+import LoadingSpinner from '@/components/shared/LoadingSpinner.vue'
+import CardImage from '@/components/shared/CardImage.vue'
 
 const route = useRoute()
 const cardsStore = useCardsStore()
 const { currentCard: card, isLoading, error } = storeToRefs(cardsStore)
-
-const categoryMap = {
-  'TRANS': '교통',
-  'COMM': '통신',
-  'SHOP': '쇼핑',
-  'COFFEE': '카페',
-  'FOOD': '외식',
-  'GAS': '주유',
-  'UTIL': '공과금',
-  'SUB': '구독',
-  'PAY': '페이',
-  'MOVIE': '영화',
-  'TRAVEL': '여행',
-  'ONLINE': '온라인',
-  'MART': '마트',
-  'BEAUTY': '뷰티',
-  'HEALTH': '건강',
-  'EDU': '교육',
-  'ETC': '기타'
-}
+const {
+  decodeHtml,
+  formatBenefits,
+  formatSpending,
+  getCardTypeLabel,
+  getCardTypeBadgeClass,
+  getCategoryName
+} = useCardUtils()
 
 onMounted(async () => {
   const cardId = route.params.id
@@ -208,54 +194,6 @@ onMounted(async () => {
 onUnmounted(() => {
   cardsStore.clearCurrentCard()
 })
-
-function formatSpending(amount) {
-  if (!amount || amount === 0) return '조건 없음'
-  return `${(amount / 10000).toLocaleString()}만원 이상`
-}
-
-function formatBenefits(text) {
-  if (!text) return ''
-  // 앞뒤에 공백이 있는 " / "만 줄바꿈으로 변환
-  return decodeHtml(text).replace(/\s+\/\s+/g, '\n')
-}
-
-function decodeHtml(text) {
-  if (!text) return ''
-  const entities = {
-    '&middot;': '·',
-    '&bull;': '•',
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&nbsp;': ' ',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&apos;': "'",
-    '&ndash;': '–',
-    '&mdash;': '—',
-    '&hellip;': '…',
-    '&trade;': '™',
-    '&reg;': '®',
-    '&copy;': '©',
-    '&times;': '×',
-    '&divide;': '÷',
-    '&plusmn;': '±',
-    '&rarr;': '→',
-    '&larr;': '←',
-    '&uarr;': '↑',
-    '&darr;': '↓',
-  }
-  return text.replace(/&[a-zA-Z0-9#]+;/g, match => entities[match] || match)
-}
-
-function getCategoryName(code) {
-  return categoryMap[code] || code || '기타'
-}
-
-function handleImageError(event) {
-  event.target.src = 'https://placehold.co/300x200/f8f9fa/999?text=No+Image'
-}
 </script>
 
 <style scoped>
