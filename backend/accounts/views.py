@@ -44,3 +44,20 @@ def information(request):
             return Response(InformationSerializer(info).data, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+from django.contrib.auth import get_user_model
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+User = get_user_model()
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_search(request):
+    q = (request.GET.get("q") or "").strip()
+    if not q:
+        return Response([])
+
+    qs = User.objects.filter(username__icontains=q).order_by("username")[:10]
+    return Response([{"id": u.id, "username": u.username} for u in qs])
