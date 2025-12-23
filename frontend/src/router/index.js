@@ -1,11 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainView from '../views/MainView.vue'
+import LoginView from '@/views/accounts/LoginView.vue'
+import RegisterView from '@/views/accounts/RegisterView.vue'
+import StockMainView from '@/views/stock/stockMainView.vue'
+import VideoDetailView from '@/views/stock/VideoDetailView.vue'
 import ProductsListView from '../views/ProductsListView.vue'
 import DepositDetailView from '../views/DepositDetailView.vue'
 import SavingDetailView from '../views/SavingDetailView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 import CardView from '../views/CardView.vue'
 import CardDetailView from '../views/CardDetailView.vue'
+import RoadMap from '@/views/banks/RoadMap.vue'
+import MyPageView from '@/views/accounts/MyPageView.vue'
+import ChartsView from '@/views/charts/chartsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,20 +40,17 @@ const router = createRouter({
     {
       path: '/commodities',
       name: 'commodities',
-      component: PlaceholderView,
-      props: { title: '현물' }
+      component: ChartsView
     },
     {
       path: '/stocks',
       name: 'stocks',
-      component: PlaceholderView,
-      props: { title: '주식' }
+      component: StockMainView,
     },
     {
       path: '/bank-map',
       name: 'bank-map',
-      component: PlaceholderView,
-      props: { title: '은행 지도' }
+      component: RoadMap,
     },
     {
       path: '/community',
@@ -57,20 +61,17 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: PlaceholderView,
-      props: { title: '로그인' }
+      component: LoginView,
     },
     {
       path: '/signup',
       name: 'signup',
-      component: PlaceholderView,
-      props: { title: '회원가입' }
+      component: RegisterView,
     },
     {
       path: '/profile',
       name: 'profile',
-      component: PlaceholderView,
-      props: { title: '프로필' }
+      component: MyPageView
     },
     // 카드 관련 라우트
     {
@@ -79,6 +80,14 @@ const router = createRouter({
       component: CardView
     },
     {
+      path: '/card-recommendation',
+      name: 'card-recommendation',
+      component: { template: '<h1>card-recommendation</h1>' }
+    },
+    {
+      path: '/videos/:id',
+      name: 'VideoDetail',
+      component: () => import ('@/views/stock/VideoDetailView.vue'),
       path: '/cards/:id',
       name: 'card-detail',
       component: CardDetailView
