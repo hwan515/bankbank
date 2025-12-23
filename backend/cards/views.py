@@ -1,4 +1,5 @@
 import time
+import re
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -160,6 +161,66 @@ def card_recommend(request):
         'category_weights': serializer.validated_data.get('category_weights', {}),
     }
 
+    # --- Query에서 하드 필터 추출 ---
+    # 1. 카드사
+    if not filters.get('company'):
+        all_companies = Card.objects.values_list('company', flat=True).distinct()
+        for comp in all_companies:
+            if comp in query:
+                filters['company'] = comp
+                break
+    
+    # 2. 카드 종류
+    if not filters.get('card_type'):
+        if '체크카드' in query or '체크 카드' in query:
+            filters['card_type'] = 'CHK'
+        elif '신용카드' in query or '신용 카드' in query:
+            filters['card_type'] = 'CRD'
+
+    # 3. 연회비
+    if filters.get('max_annual_fee') is None:
+        if '연회비 없는' in query or '연회비 무료' in query:
+            filters['max_annual_fee'] = 0
+        else:
+            # "연회비 1만원", "연회비 2만" 등 패턴
+            match = re.search(r'연회비\s*(\d+)\s*만', query)
+            if match:
+                try:
+                    filters['max_annual_fee'] = int(match.group(1)) * 10000
+                except (ValueError, IndexError):
+                    pass
+
+    # 4. 전월실적
+    if filters.get('max_min_spending') is None:
+        if '실적 없는' in query or '무실적' in query or '실적무관' in query:
+            filters['max_min_spending'] = 0
+        else:
+            # "실적 30만원", "전월실적 50만" 등 패턴
+            match = re.search(r'(?:전월실적|실적)\s*(\d+)\s*만', query)
+            if match:
+                try:
+                    filters['max_min_spending'] = int(match.group(1)) * 10000
+                except (ValueError, IndexError):
+                    pass
+    # --- 필터 추출 끝 ---
+
+    # --- 로그인 사용자의 UserProfile 자동 적용 ---
+    if request.user.is_authenticated:
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            # 카테고리 가중치가 설정되어 있고, 요청에서 지정하지 않은 경우 자동 적용
+            if profile.category_weights and not filters.get('category_weights'):
+                filters['category_weights'] = profile.category_weights
+            # 연회비 허용치 자동 적용
+            if profile.fee_tolerance and filters.get('max_annual_fee') is None:
+                filters['max_annual_fee'] = profile.fee_tolerance
+            # 전월실적 허용치 자동 적용
+            if profile.min_spend_tolerance and filters.get('max_min_spending') is None:
+                filters['max_min_spending'] = profile.min_spend_tolerance
+        except UserProfile.DoesNotExist:
+            pass
+    # --- UserProfile 적용 끝 ---
+
     start_time = time.time()
 
     try:
@@ -286,3 +347,115 @@ def user_profile(request):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_like(request, pk):
+    """
+    POST /cards/<id>/like/ - 카드 좋아요 토글
+    """
+    try:
+        card = Card.objects.get(pk=pk)
+    except Card.DoesNotExist:
+        return Response(
+            {'detail': '카드를 찾을 수 없습니다.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # 기존 좋아요 확인
+    existing = UserEvent.objects.filter(
+        user=request.user,
+        card=card,
+        event_type='LIKE'
+    ).first()
+
+    if existing:
+        existing.delete()
+        liked = False
+    else:
+        UserEvent.objects.create(
+            user=request.user,
+            card=card,
+            event_type='LIKE',
+            context={'source': 'toggle'}
+        )
+        liked = True
+
+    like_count = UserEvent.objects.filter(card=card, event_type='LIKE').count()
+    return Response({'liked': liked, 'like_count': like_count})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_liked_cards(request):
+    """
+    GET /cards/my/liked/ - 좋아요한 카드 목록
+    """
+    liked_events = UserEvent.objects.filter(
+        user=request.user,
+        event_type='LIKE'
+    ).select_related('card').order_by('-created_at')
+
+    cards = [event.card for event in liked_events if event.card]
+    serializer = CardListSerializer(cards, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_recent_cards(request):
+    """
+    GET /cards/my/recent/ - 최근 본 카드 목록 (VIEW 이벤트 기반)
+    """
+    viewed_events = UserEvent.objects.filter(
+        user=request.user,
+        event_type='VIEW'
+    ).select_related('card').order_by('-created_at')[:50]
+
+    seen = set()
+    cards = []
+    for event in viewed_events:
+        if event.card and event.card_id not in seen:
+            seen.add(event.card_id)
+            cards.append(event.card)
+            if len(cards) >= 10:
+                break
+
+    serializer = CardListSerializer(cards, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_recommendation_history(request):
+    """
+    GET /cards/my/recommendations/ - 추천 이력 조회
+    """
+    logs = RecommendationLog.objects.filter(
+        user=request.user
+    ).order_by('-created_at')[:20]
+
+    data = []
+    for log in logs:
+        cards = Card.objects.filter(id__in=log.result_card_ids)
+        card_map = {c.id: c for c in cards}
+
+        result_cards = []
+        for cid, score in zip(log.result_card_ids, log.result_scores):
+            card = card_map.get(cid)
+            if card:
+                result_cards.append({
+                    'card': CardListSerializer(card, context={'request': request}).data,
+                    'score': score
+                })
+
+        data.append({
+            'id': log.id,
+            'query_text': log.query_text,
+            'filters': log.filters,
+            'result_cards': result_cards[:3],
+            'created_at': log.created_at
+        })
+
+    return Response(data)

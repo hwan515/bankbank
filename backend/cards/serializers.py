@@ -28,6 +28,8 @@ class CardDetailSerializer(serializers.ModelSerializer):
     primary_category = serializers.CharField(read_only=True)
     benefits_by_category = serializers.SerializerMethodField()
     image_url = serializers.CharField(read_only=True)
+    is_liked = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Card
@@ -37,12 +39,28 @@ class CardDetailSerializer(serializers.ModelSerializer):
             'benefits_summary', 'benefits_json', 'structured_benefit',
             'main_benefit', 'category', 'categories', 'category_names',
             'primary_category', 'benefits_by_category',
-            'image_url', 'created_at', 'updated_at'
+            'image_url', 'is_liked', 'like_count',
+            'created_at', 'updated_at'
         ]
 
     def get_benefits_by_category(self, obj):
         """카테고리별 최고 혜택"""
         return obj.get_top_benefit_per_category()
+
+    def get_is_liked(self, obj):
+        """현재 사용자가 좋아요 했는지"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return UserEvent.objects.filter(
+                user=request.user,
+                card=obj,
+                event_type='LIKE'
+            ).exists()
+        return False
+
+    def get_like_count(self, obj):
+        """좋아요 수"""
+        return UserEvent.objects.filter(card=obj, event_type='LIKE').count()
 
 
 class CardRecommendRequestSerializer(serializers.Serializer):

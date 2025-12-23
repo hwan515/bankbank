@@ -84,42 +84,7 @@
 
           <div class="row g-4">
             <div v-for="card in cards" :key="card.id" class="col-md-6 col-lg-4">
-              <div class="card h-100 shadow-sm card-hover" @click="goToDetail(card.id)" style="cursor: pointer;">
-                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 160px;">
-                  <CardImage
-                    :src="card.image_url"
-                    :alt="card.name"
-                    img-style="max-height: 140px; object-fit: contain;"
-                    placeholder-size="200x120"
-                  />
-                </div>
-                <div class="card-body">
-                  <div class="mb-2">
-                    <span class="badge bg-secondary me-1">{{ card.company }}</span>
-                    <span class="badge" :class="getCardTypeBadgeClass(card.card_type)">
-                      {{ card.card_type === 'CRD' ? '신용' : '체크' }}
-                    </span>
-                    <span v-if="card.ranking" class="badge bg-warning text-dark ms-1">{{ card.ranking }}위</span>
-                  </div>
-                  <h6 class="card-title mb-2">{{ card.name }}</h6>
-                  <p class="card-text text-muted small mb-2">{{ card.main_benefit || '혜택 정보 없음' }}</p>
-                  <!-- 카테고리 표시 -->
-                  <div v-if="card.category_names && card.category_names.length" class="mb-2">
-                    <span
-                      v-for="(catName, idx) in card.category_names.slice(0, 4)"
-                      :key="idx"
-                      class="badge bg-info bg-opacity-25 text-info me-1"
-                    >{{ catName }}</span>
-                  </div>
-                  <div class="text-end">
-                    <small class="text-muted">{{ card.annual_fee || '연회비 정보 없음' }}</small>
-                  </div>
-                </div>
-
-                <div class="name" :title="card.name">{{ card.name }}</div>
-                <div class="benefit">{{ card.main_benefit || '혜택 정보 없음' }}</div>
-                <div class="fee">{{ card.annual_fee || '연회비 정보 없음' }}</div>
-              </div>
+              <CardListItem :card="card" @clicked="goToDetail(card.id)" />
             </div>
           </div>
 
@@ -254,64 +219,12 @@
 
           <div class="row g-4">
             <div v-for="(result, index) in recommendedCards" :key="result.card.gorilla_id" class="col-12">
-              <div class="card shadow-sm h-100 card-hover" @click="goToDetail(result.card.id)" style="cursor: pointer;">
-                <div class="card-body">
-                  <div class="row align-items-center">
-                    <div class="col-auto">
-                      <div class="rounded-circle d-flex align-items-center justify-content-center" :class="getRankBadgeClass(index)" style="width: 50px; height: 50px;">
-                        <span class="fw-bold fs-5">{{ index + 1 }}</span>
-                      </div>
-                    </div>
-                    <div class="col-auto">
-                      <CardImage
-                        :src="result.card.image_url"
-                        :alt="result.card.name"
-                        img-class="rounded"
-                        img-style="width: 120px; height: 76px; object-fit: contain; background: #f8f9fa;"
-                        placeholder-size="120x76"
-                      />
-                    </div>
-                    <div class="col">
-                      <div class="d-flex align-items-center mb-1">
-                        <span class="badge bg-secondary me-2">{{ result.card.company }}</span>
-                        <span v-if="result.card.ranking" class="badge bg-warning text-dark">인기 {{ result.card.ranking }}위</span>
-                      </div>
-                      <h5 class="card-title mb-1">{{ result.card.name }}</h5>
-                      <p class="text-muted mb-2 small">{{ result.preview }}</p>
-                      <!-- 카테고리 표시 -->
-                      <div v-if="result.card.category_names && result.card.category_names.length" class="mb-2">
-                        <span
-                          v-for="(catName, idx) in result.card.category_names.slice(0, 4)"
-                          :key="idx"
-                          class="badge bg-info bg-opacity-25 text-info me-1"
-                        >{{ catName }}</span>
-                      </div>
-                      <!-- 추천 이유 -->
-                      <div v-if="result.reasons && result.reasons.length" class="d-flex flex-wrap gap-1">
-                        <span
-                          v-for="(reason, ri) in result.reasons.slice(0, 3)"
-                          :key="ri"
-                          class="badge bg-light text-dark border"
-                        >
-                          {{ reason }}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="col-auto text-end">
-                      <div class="text-muted small">매칭 점수</div>
-                      <div class="fs-4 fw-bold" :class="getScoreClass(result.score)">{{ formatScore(result.score) }}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="rec-name">{{ result.card.name }}</div>
-                <div class="rec-preview">{{ result.preview }}</div>
-              </div>
-
-              <div class="score">
-                <div class="muted small">매칭 점수</div>
-                <div class="score-num" :class="getScoreClass(result.score)">{{ formatScore(result.score) }}</div>
-              </div>
+              <CardListItem
+                variant="recommend"
+                :card="result.card"
+                :recommendation="{ ...result, index }"
+                @clicked="goToDetail(result.card.id)"
+              />
             </div>
           </div>
         </div>
@@ -335,6 +248,8 @@ import { storeToRefs } from 'pinia'
 import { useCardUtils } from '@/composables/useCardUtils'
 import LoadingSpinner from '@/components/shared/LoadingSpinner.vue'
 import CardImage from '@/components/shared/CardImage.vue'
+import CardListItem from '@/components/cards/CardListItem.vue'
+import api from '@/stores/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -384,7 +299,7 @@ onMounted(async () => {
 // 카테고리 목록 조회
 async function fetchCategories() {
   try {
-    const response = await import('@/stores/api').then(m => m.default.get('/cards/categories/'))
+    const response = await api.get('/cards/categories/')
     categoryOptions.value = response.data
   } catch (err) {
     console.error('카테고리 목록 조회 실패:', err)

@@ -67,6 +67,17 @@
                 {{ getCardTypeLabel(card.card_type) }}
               </span>
               <span v-if="card.category" class="badge bg-info">{{ card.category }}</span>
+
+              <!-- 좋아요 버튼 -->
+              <button
+                class="btn-like"
+                :class="{ 'liked': card.is_liked }"
+                @click="handleLikeToggle"
+                :disabled="likeLoading"
+              >
+                <i class="bi" :class="card.is_liked ? 'bi-heart-fill' : 'bi-heart'"></i>
+                <span>{{ card.like_count || 0 }}</span>
+              </button>
             </div>
 
             <!-- 주요 혜택 -->
@@ -161,9 +172,10 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCardsStore } from '@/stores/cards'
+import { useAccountStore } from '@/stores/account'
 import { storeToRefs } from 'pinia'
 import { useCardUtils } from '@/composables/useCardUtils'
 import LoadingSpinner from '@/components/shared/LoadingSpinner.vue'
@@ -171,7 +183,9 @@ import CardImage from '@/components/shared/CardImage.vue'
 
 const route = useRoute()
 const cardsStore = useCardsStore()
+const accountStore = useAccountStore()
 const { currentCard: card, isLoading, error } = storeToRefs(cardsStore)
+const { isLogin } = storeToRefs(accountStore)
 const {
   decodeHtml,
   formatBenefits,
@@ -181,14 +195,35 @@ const {
   getCategoryName
 } = useCardUtils()
 
+const likeLoading = ref(false)
+
 onMounted(async () => {
   const cardId = route.params.id
   await cardsStore.fetchCardDetail(cardId)
+
+  // VIEW 이벤트 기록
+  cardsStore.recordEvent(cardId, 'VIEW', { source: 'detail_page' })
 })
 
 onUnmounted(() => {
   cardsStore.clearCurrentCard()
 })
+
+// 좋아요 토글
+async function handleLikeToggle() {
+  if (!isLogin.value) {
+    alert('로그인이 필요합니다.')
+    return
+  }
+  if (likeLoading.value) return
+
+  likeLoading.value = true
+  try {
+    await cardsStore.toggleLike(card.value.id)
+  } finally {
+    likeLoading.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -228,6 +263,36 @@ onUnmounted(() => {
   border-color: #e8e8e8;
 }
 .btn-mini.ghost:hover { background: #fafafa; }
+
+/* 좋아요 버튼 */
+.btn-like {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  color: #666;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-like:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+.btn-like.liked {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+}
+.btn-like:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* 레이아웃 */
 .layout {

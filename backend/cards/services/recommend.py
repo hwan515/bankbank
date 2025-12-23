@@ -100,8 +100,8 @@ class CardRecommendService:
         s = re.sub(r"\n{3,}", "\n\n", s)
         return s.strip()
 
-    def _get_sql_candidates(self, filters: Dict[str, Any]) -> Set[int]:
-        """MySQL에서 하드 필터로 후보 카드 gorilla_id 집합 반환"""
+    def _get_sql_candidates(self, filters: Dict[str, Any]) -> List[int]:
+        """MySQL에서 하드 필터로 후보 카드 gorilla_id 리스트 반환"""
         qs = Card.objects.all()
 
         company = (filters.get('company') or '').strip()
@@ -126,7 +126,7 @@ class CardRecommendService:
             ranking_order=Coalesce('ranking', 999999)
         ).order_by('ranking_order', '-created_at')[:self.sql_top_n]
 
-        return set(qs.values_list('gorilla_id', flat=True))
+        return list(qs.values_list('gorilla_id', flat=True))
 
     def _get_chroma_candidates(self, query: str, filters: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
         """
@@ -210,44 +210,28 @@ class CardRecommendService:
         over = card.annual_fee_min - max_annual_fee
         return min(over / 100000.0, 0.3)  # 10만원 초과당 최대 0.3
 
-    def _generate_reasons(
-        self, card: Card,
-        semantic_score: float,
-        fit_score: float,
-        category_weights: Dict[str, float]
-    ) -> List[str]:
-        """추천 이유 문장 생성"""
-        reasons = []
-        category_map = dict(Card.CATEGORY_CHOICES)
-
-        # 매칭된 카테고리 찾기
-        if category_weights and card.categories:
-            matched = []
-            for cat in card.categories[:3]:
-                if cat in category_weights:
-                    cat_name = category_map.get(cat, cat)
-                    matched.append(cat_name)
-            if matched:
-                reasons.append(f"{', '.join(matched)} 혜택 보유")
-
-        # 대표 혜택
+    def _generate_reasons(self, card: Card, *args, **kwargs) -> List[str]:
+        """
+        추천 이유를 생성합니다. DB에서 조회한 가장 메인이 되는 혜택을 이유로 제시합니다.
+        """
+        reason = ""
+        
+        # 1순위: main_benefit 필드 (get_main_benefit_display() 등 모델의 요약 메소드)
         if card.main_benefit:
-            benefit_text = card.main_benefit[:50]
-            if len(card.main_benefit) > 50:
-                benefit_text += "..."
-            reasons.append(f"대표 혜택: {benefit_text}")
+            reason = card.main_benefit
+        # 2순위: benefits_summary 필드
+        elif card.benefits_summary:
+            reason = card.benefits_summary
 
-        # 연회비/전월실적 정보
-        if card.annual_fee_min == 0:
-            reasons.append("연회비 무료")
-        if card.min_spending == 0:
-            reasons.append("전월실적 조건 없음")
+        if reason:
+            # 너무 길지 않게 자르고, "대표 혜택: " 접두사 추가
+            reason_text = reason[:50]
+            if len(reason) > 50:
+                reason_text += "..."
+            return [f"대표 혜택: {reason_text}"]
 
-        # 랭킹 정보
-        if card.ranking and card.ranking <= 10:
-            reasons.append(f"인기 순위 {card.ranking}위")
-
-        return reasons[:4]  # 최대 4개
+        # 최후의 보루: 아무 혜택 정보도 없을 경우
+        return ["다양한 혜택 제공"]
 
     def recommend(
         self,
@@ -277,27 +261,35 @@ class CardRecommendService:
         max_min_spending = filters.get('max_min_spending')
         max_annual_fee = filters.get('max_annual_fee')
 
-        # 1. SQL 후보군
+        # 1. SQL 후보군 (순서 보장)
         sql_candidates = self._get_sql_candidates(filters)
 
         # 2. Chroma 후보군
         chroma_candidates = self._get_chroma_candidates(query, filters)
 
-        # 3. 후보 합치기
-        # 자연어가 있으면: (SQL ∩ Chroma) + Chroma 상위
-        # 자연어가 없으면: SQL만 사용
+        # 3. 후보 합치기 (순서 보존)
         if chroma_candidates:
-            # 교집합 우선
-            final_gids = sql_candidates & set(chroma_candidates.keys())
-            # Chroma 결과 중 SQL 필터를 통과한 것들도 포함
-            for gid in chroma_candidates:
-                if gid in sql_candidates:
-                    final_gids.add(gid)
-            # fallback: SQL 후보 중 상위도 일부 포함
+            final_gids = []
+            seen_gids = set()
+            sql_candidates_set = set(sql_candidates)
+
+            # 1. 교집합: Chroma 결과 중 SQL 하드 필터를 통과한 카드들 (Chroma 순서 유지)
+            for gid in chroma_candidates.keys():
+                if gid in sql_candidates_set:
+                    if gid not in seen_gids:
+                        final_gids.append(gid)
+                        seen_gids.add(gid)
+
+            # 2. Fallback: 교집합만으로 후보가 부족할 경우, SQL 후보군에서 추가 (랭킹 순)
             if len(final_gids) < k * 3:
-                for gid in list(sql_candidates)[:k * 2]:
-                    final_gids.add(gid)
+                for gid in sql_candidates:
+                    if len(final_gids) >= k * 3:
+                        break
+                    if gid not in seen_gids:
+                        final_gids.append(gid)
+                        seen_gids.add(gid)
         else:
+            # Chroma 검색이 없으면 그냥 SQL 결과 사용
             final_gids = sql_candidates
 
         if not final_gids:
@@ -347,20 +339,30 @@ class CardRecommendService:
 
             reasons = self._generate_reasons(card, semantic_score, fit_score, category_weights)
 
-            scored.append((
-                total,
-                RecommendHit(
-                    gorilla_id=gid,
-                    score=total,
-                    semantic_score=semantic_score,
-                    fit_score=fit_score,
-                    preview=preview,
-                    reasons=reasons,
-                    name=card.name,
-                    company=card.company,
-                    ranking=card.ranking,
+            # 이유가 비어있으면 preview 텍스트를 기반으로 생성
+            if not reasons and preview:
+                # "주요 혜택: " 같은 접두사를 붙여 일관성 유지
+                reason_text = preview.replace('...', '')
+                if "대표 혜택" not in reason_text and "혜택" not in reason_text:
+                    reason_text = f"주요 혜택: {reason_text}"
+                reasons.append(reason_text)
+
+            scored.append(
+                (
+                    total,
+                    RecommendHit(
+                        gorilla_id=gid,
+                        score=total,
+                        semantic_score=semantic_score,
+                        fit_score=fit_score,
+                        preview=preview,
+                        reasons=reasons,
+                        name=card.name,
+                        company=card.company,
+                        ranking=card.ranking,
+                    ),
                 )
-            ))
+            )
 
         # 6. 정렬 및 반환
         scored.sort(key=lambda x: x[0], reverse=True)
@@ -369,3 +371,106 @@ class CardRecommendService:
     def recommend_simple(self, query: str, k: int = 5) -> List[RecommendHit]:
         """기존 호환용 단순 추천 (필터 없음)"""
         return self.recommend(query, k=k, filters={})
+
+    def recommend_by_profile(
+        self,
+        filters: Dict[str, Any],
+        k: int = 10
+    ) -> List[RecommendHit]:
+        """
+        선호도만으로 카드 추천 (query 없이 category_weights 기반)
+
+        Args:
+            filters: {
+                'category_weights': {'COFFEE': 3, 'FOOD': 2, ...},
+                'max_annual_fee': int,
+                'max_min_spending': int,
+            }
+            k: 반환할 카드 수
+
+        Returns:
+            RecommendHit 리스트 (fit_score 기반 정렬)
+        """
+        category_weights = filters.get('category_weights', {})
+        max_min_spending = filters.get('max_min_spending')
+        max_annual_fee = filters.get('max_annual_fee')
+
+        if not category_weights:
+            return []
+
+        # SQL 후보군 조회
+        sql_candidates = self._get_sql_candidates(filters)
+
+        if not sql_candidates:
+            return []
+
+        # DB에서 카드 조회
+        cards = Card.objects.filter(gorilla_id__in=sql_candidates)
+        card_map = {c.gorilla_id: c for c in cards}
+
+        # 점수 계산 (fit_score 중심)
+        scored: List[tuple] = []
+
+        for gid in sql_candidates:
+            card = card_map.get(gid)
+            if not card:
+                continue
+
+            # fit score (선호도 매칭)
+            fit_score = self._calc_fit_score(card, category_weights)
+
+            # 선호도가 0인 카드는 제외
+            if fit_score == 0:
+                continue
+
+            # penalties
+            penalty = self._calc_penalty(card, max_min_spending, max_annual_fee)
+            fee_penalty = self._calc_fee_penalty(card, max_annual_fee)
+
+            # total score (semantic 없이 fit_score 중심)
+            total = (
+                0.70 * fit_score -
+                0.20 * penalty -
+                0.10 * fee_penalty
+            )
+
+            # 랭킹 보너스
+            if card.ranking:
+                ranking_bonus = max(0, (100 - card.ranking) / 1000.0)
+                total += ranking_bonus
+
+            # preview 생성
+            preview = ""
+            if card.benefits_summary:
+                preview = card.benefits_summary[:80]
+                if len(card.benefits_summary) > 80:
+                    preview += "..."
+
+            # 추천 이유 생성 (선호 카테고리 기반)
+            matched_cats = [cat for cat in card.categories if category_weights.get(cat, 0) > 0]
+            if matched_cats:
+                cat_names = [Card.CATEGORY_MAP.get(c, c) for c in matched_cats[:3]]
+                reasons = [f"선호 카테고리: {', '.join(cat_names)}"]
+            else:
+                reasons = self._generate_reasons(card)
+
+            scored.append(
+                (
+                    total,
+                    RecommendHit(
+                        gorilla_id=gid,
+                        score=total,
+                        semantic_score=0.0,
+                        fit_score=fit_score,
+                        preview=preview,
+                        reasons=reasons,
+                        name=card.name,
+                        company=card.company,
+                        ranking=card.ranking,
+                    ),
+                )
+            )
+
+        # 정렬 및 반환
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [hit for _, hit in scored[:k]]
