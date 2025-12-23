@@ -409,6 +409,7 @@ class CardRecommendService:
         card_map = {c.gorilla_id: c for c in cards}
 
         # 점수 계산 (fit_score 중심)
+        category_map = dict(Card.CATEGORY_CHOICES)
         scored: List[tuple] = []
 
         for gid in sql_candidates:
@@ -449,7 +450,7 @@ class CardRecommendService:
             # 추천 이유 생성 (선호 카테고리 기반)
             matched_cats = [cat for cat in card.categories if category_weights.get(cat, 0) > 0]
             if matched_cats:
-                cat_names = [Card.CATEGORY_MAP.get(c, c) for c in matched_cats[:3]]
+                cat_names = [category_map.get(c, c) for c in matched_cats[:3]]
                 reasons = [f"선호 카테고리: {', '.join(cat_names)}"]
             else:
                 reasons = self._generate_reasons(card)

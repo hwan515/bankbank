@@ -56,9 +56,9 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class PostListSerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source="author.username", read_only=True)
-    comment_count = serializers.IntegerField(source="comments.count", read_only=True)
-    like_count = serializers.SerializerMethodField()
-    dislike_count = serializers.SerializerMethodField()
+    comment_count = serializers.IntegerField(read_only=True)
+    like_count = serializers.IntegerField(read_only=True)
+    dislike_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Post
@@ -72,13 +72,6 @@ class PostListSerializer(serializers.ModelSerializer):
             "like_count",
             "dislike_count",
         ]
-
-    def get_like_count(self, obj):
-        return obj.like_users.count()
-
-    def get_dislike_count(self, obj):
-        return obj.dislike_users.count()
-
 
 class PostDetailSerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source="author.username", read_only=True)
@@ -120,9 +113,13 @@ class PostDetailSerializer(serializers.ModelSerializer):
         return bool(user and user.is_authenticated and obj.author_id == user.id)
 
     def get_like_count(self, obj):
+        if hasattr(obj, "like_count"):
+            return obj.like_count
         return obj.like_users.count()
 
     def get_dislike_count(self, obj):
+        if hasattr(obj, "dislike_count"):
+            return obj.dislike_count
         return obj.dislike_users.count()
 
     def get_user_reaction(self, obj):

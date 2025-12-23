@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, Count, Exists, OuterRef
 
 from .models import Card, UserProfile, UserEvent, RecommendationLog
 from .serializers import (
@@ -99,8 +99,25 @@ def card_detail(request, pk):
     """
     GET /cards/<id>/ - 카드 상세 조회
     """
+    base_qs = Card.objects.all()
+
+    # 좋아요 수, 사용자 좋아요 여부를 한 번에 계산
+    base_qs = base_qs.annotate(
+        like_count=Count('events', filter=Q(events__event_type='LIKE'), distinct=False)
+    )
+    if request.user.is_authenticated:
+        base_qs = base_qs.annotate(
+            is_liked=Exists(
+                UserEvent.objects.filter(
+                    user=request.user,
+                    card=OuterRef('pk'),
+                    event_type='LIKE'
+                )
+            )
+        )
+
     try:
-        card = Card.objects.get(pk=pk)
+        card = base_qs.get(pk=pk)
     except Card.DoesNotExist:
         return Response(
             {'detail': '카드를 찾을 수 없습니다.'},
@@ -280,6 +297,14 @@ def card_recommend(request):
                 result_scores=result_scores,
                 processing_time_ms=processing_time_ms,
             )
+
+            # 사용자별 추천 이력은 최신 3개만 유지
+            if request.user.is_authenticated:
+                extra_logs = RecommendationLog.objects.filter(
+                    user=request.user
+                ).order_by('-created_at')[3:]
+                if extra_logs:
+                    RecommendationLog.objects.filter(id__in=[log.id for log in extra_logs]).delete()
         except Exception:
             pass  # 로그 저장 실패해도 추천 결과는 반환
 
@@ -293,6 +318,90 @@ def card_recommend(request):
     except Exception as e:
         return Response(
             {'detail': f'추천 서비스 오류: {str(e)}'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def personalized_recommend(request):
+    """
+    GET /cards/recommend/personalized/ - 사용자 선호도 기반 카드 추천
+    - 로그인 사용자의 UserProfile을 기반으로 추천
+    - query params:
+        - k: 반환할 카드 수 (기본 5, 최대 20)
+        - max_annual_fee: 연회비 상한(선호도 덮어쓰기)
+        - max_min_spending: 전월실적 상한(선호도 덮어쓰기)
+    """
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    category_weights = profile.category_weights or {}
+    if not category_weights:
+        return Response(
+            {'detail': '카테고리 선호도가 설정되지 않았습니다. 프로필을 먼저 저장하세요.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        k = int(request.query_params.get('k', 5))
+    except ValueError:
+        k = 5
+    k = max(1, min(k, 20))
+
+    filters = {
+        'category_weights': category_weights,
+        'max_annual_fee': profile.fee_tolerance or None,
+        'max_min_spending': profile.min_spend_tolerance or None,
+    }
+
+    # 사용자가 쿼리 파라미터로 덮어쓰기를 요청한 경우 반영
+    if 'max_annual_fee' in request.query_params:
+        try:
+            filters['max_annual_fee'] = int(request.query_params.get('max_annual_fee'))
+        except (TypeError, ValueError):
+            pass
+    if 'max_min_spending' in request.query_params:
+        try:
+            filters['max_min_spending'] = int(request.query_params.get('max_min_spending'))
+        except (TypeError, ValueError):
+            pass
+
+    start_time = time.time()
+
+    try:
+        from .services.recommend import CardRecommendService
+        service = CardRecommendService()
+        hits = service.recommend_by_profile(filters=filters, k=k)
+
+        processing_time_ms = int((time.time() - start_time) * 1000)
+
+        # bulk 조회 (N+1 제거)
+        gids = [h.gorilla_id for h in hits]
+        cards = Card.objects.filter(gorilla_id__in=gids)
+        card_map = {c.gorilla_id: c for c in cards}
+
+        response_data = []
+        for h in hits:
+            card = card_map.get(h.gorilla_id)
+            if card:
+                response_data.append({
+                    'card': CardListSerializer(card, context={'request': request}).data,
+                    'score': round(h.score, 4),
+                    'semantic_score': round(h.semantic_score, 4),
+                    'fit_score': round(h.fit_score, 4),
+                    'reasons': h.reasons,
+                    'preview': h.preview,
+                })
+
+        return Response({
+            'results': response_data,
+            'filters': filters,
+            'processing_time_ms': processing_time_ms,
+        })
+
+    except Exception as e:
+        return Response(
+            {'detail': f'개인화 추천 오류: {str(e)}'},
             status=status.HTTP_503_SERVICE_UNAVAILABLE
         )
 
@@ -319,13 +428,35 @@ def card_event(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
+    session_id = request.session.session_key or ''
+    user = request.user if request.user.is_authenticated else None
+
     UserEvent.objects.create(
-        user=request.user if request.user.is_authenticated else None,
+        user=user,
         card=card,
         event_type=event_type,
         context=context,
-        session_id=request.session.session_key or '',
+        session_id=session_id,
     )
+
+    # 최근 본 카드(VIEW)는 사용자/세션별 5개만 유지
+    if event_type == 'VIEW':
+        if user:
+            extra_view_ids = list(
+                UserEvent.objects.filter(user=user, event_type='VIEW')
+                .order_by('-created_at')
+                .values_list('id', flat=True)[5:]
+            )
+            if extra_view_ids:
+                UserEvent.objects.filter(id__in=extra_view_ids).delete()
+        else:
+            extra_view_ids = list(
+                UserEvent.objects.filter(session_id=session_id, event_type='VIEW')
+                .order_by('-created_at')
+                .values_list('id', flat=True)[5:]
+            )
+            if extra_view_ids:
+                UserEvent.objects.filter(id__in=extra_view_ids).delete()
 
     return Response({'status': 'ok'}, status=status.HTTP_201_CREATED)
 
@@ -363,24 +494,21 @@ def toggle_like(request, pk):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    # 기존 좋아요 확인
-    existing = UserEvent.objects.filter(
+    like_event, created = UserEvent.objects.get_or_create(
         user=request.user,
         card=card,
-        event_type='LIKE'
-    ).first()
+        event_type='LIKE',
+        defaults={
+            'context': {'source': 'toggle'},
+            'session_id': request.session.session_key or '',
+        }
+    )
 
-    if existing:
-        existing.delete()
-        liked = False
-    else:
-        UserEvent.objects.create(
-            user=request.user,
-            card=card,
-            event_type='LIKE',
-            context={'source': 'toggle'}
-        )
+    if created:
         liked = True
+    else:
+        like_event.delete()
+        liked = False
 
     like_count = UserEvent.objects.filter(card=card, event_type='LIKE').count()
     return Response({'liked': liked, 'like_count': like_count})
@@ -432,15 +560,21 @@ def my_recommendation_history(request):
     """
     GET /cards/my/recommendations/ - 추천 이력 조회
     """
-    logs = RecommendationLog.objects.filter(
-        user=request.user
-    ).order_by('-created_at')[:20]
+    logs = list(
+        RecommendationLog.objects.filter(user=request.user)
+        .order_by('-created_at')[:20]
+    )
+
+    # 모든 로그에 등장하는 카드 ID를 모아 한 번에 조회 (N+1 방지)
+    all_card_ids = set()
+    for log in logs:
+        all_card_ids.update(log.result_card_ids or [])
+
+    cards = Card.objects.filter(id__in=all_card_ids)
+    card_map = {c.id: c for c in cards}
 
     data = []
     for log in logs:
-        cards = Card.objects.filter(id__in=log.result_card_ids)
-        card_map = {c.id: c for c in cards}
-
         result_cards = []
         for cid, score in zip(log.result_card_ids, log.result_scores):
             card = card_map.get(cid)

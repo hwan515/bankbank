@@ -49,6 +49,10 @@ class CardDetailSerializer(serializers.ModelSerializer):
 
     def get_is_liked(self, obj):
         """현재 사용자가 좋아요 했는지"""
+        # view에서 annotate된 경우 그대로 사용
+        if hasattr(obj, 'is_liked'):
+            return bool(obj.is_liked)
+
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return UserEvent.objects.filter(
@@ -60,6 +64,8 @@ class CardDetailSerializer(serializers.ModelSerializer):
 
     def get_like_count(self, obj):
         """좋아요 수"""
+        if hasattr(obj, 'like_count'):
+            return int(obj.like_count or 0)
         return UserEvent.objects.filter(card=obj, event_type='LIKE').count()
 
 

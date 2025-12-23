@@ -271,6 +271,14 @@ class UserEvent(models.Model):
             models.Index(fields=['user', 'created_at']),
             models.Index(fields=['card', 'created_at']),
             models.Index(fields=['event_type', 'created_at']),
+            models.Index(fields=['card', 'event_type']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'card', 'event_type'],
+                name='unique_user_card_event',
+                condition=models.Q(user__isnull=False),
+            ),
         ]
 
 
