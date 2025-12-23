@@ -7,12 +7,14 @@ import VideoDetailView from '@/views/stock/VideoDetailView.vue'
 import ProductsListView from '../views/ProductsListView.vue'
 import DepositDetailView from '../views/DepositDetailView.vue'
 import SavingDetailView from '../views/SavingDetailView.vue'
-import PlaceholderView from '../views/PlaceholderView.vue'
 import CardView from '../views/CardView.vue'
 import CardDetailView from '../views/CardDetailView.vue'
 import RoadMap from '@/views/banks/RoadMap.vue'
 import MyPageView from '@/views/accounts/MyPageView.vue'
 import ChartsView from '@/views/charts/chartsView.vue'
+import CommunityListView from '@/views/community/CommunityListView.vue'
+import CommunityDetailView from '@/views/community/CommunityDetailView.vue'
+import PostFormView from '@/views/community/PostFormView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -55,8 +57,22 @@ const router = createRouter({
     {
       path: '/community',
       name: 'community',
-      component: PlaceholderView,
-      props: { title: '커뮤니티' }
+      component: CommunityListView,
+    },
+    {
+      path: '/community/new',
+      name: 'community-new',
+      component: PostFormView,
+    },
+    {
+      path: '/community/:id',
+      name: 'community-detail',
+      component: CommunityDetailView,
+    },
+    {
+      path: '/community/:id/edit',
+      name: 'community-edit',
+      component: PostFormView,
     },
     {
       path: '/login',
@@ -87,7 +103,9 @@ const router = createRouter({
     {
       path: '/videos/:id',
       name: 'VideoDetail',
-      component: () => import ('@/views/stock/VideoDetailView.vue'),
+      component: VideoDetailView,
+    },
+    {
       path: '/cards/:id',
       name: 'card-detail',
       component: CardDetailView

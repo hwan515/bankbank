@@ -8,7 +8,8 @@ import requests
 from .models import FinancialCompany, DepositProducts, DepositOptions, SavingProducts, SavingOptions
 from .serializers import (
     DepositProductsSerializer, DepositProductsListSerializer,
-    SavingProductsSerializer, SavingProductsListSerializer
+    SavingProductsSerializer, SavingProductsListSerializer,
+    SimpleDepositProductSerializer, SimpleSavingProductSerializer,
 )
 
 
@@ -414,3 +415,19 @@ def check_subscription(request, product_type, pk):
         return Response({"error": "Invalid product type"}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({"subscribed": subscribed}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_subscriptions(request):
+    """
+    사용자가 가입한 예금/적금 목록 조회
+    """
+    user = request.user
+    deposit_qs = user.deposit_products.all()
+    saving_qs = user.saving_products.all()
+
+    return Response({
+        "deposits": SimpleDepositProductSerializer(deposit_qs, many=True).data,
+        "savings": SimpleSavingProductSerializer(saving_qs, many=True).data,
+    }, status=status.HTTP_200_OK)
