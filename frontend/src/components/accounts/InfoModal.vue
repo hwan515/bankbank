@@ -1,6 +1,6 @@
 <template>
   <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal-content rounded-4 shadow">
+    <div class="modal-content rounded-4 shadow ui-card">
       <div class="modal-header p-4 pb-3 border-bottom-0">
         <h1 class="fw-bold mb-0 fs-4">{{ isNew ? '정보 추가' : '정보 편집' }}</h1>
         <button type="button" class="btn-close" aria-label="Close" @click="emit('close')"></button>
@@ -106,7 +106,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 .modal-content {
   width: min(520px, 100%);
-  background: #fff;
-  border: 1px solid #eee;
+  background: var(--surface);
+  border: 1px solid var(--border);
 }
 </style>

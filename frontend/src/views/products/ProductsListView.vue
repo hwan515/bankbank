@@ -3,9 +3,9 @@
     <div class="container py-4">
       <!-- 헤더 -->
       <div class="head">
-        <div class="badge">Products</div>
-        <h1 class="title">예금 비교</h1>
-        <p class="sub">은행/상품명/기간으로 필터링해서 금리를 한눈에 비교해보세요.</p>
+        <div class="ui-badge">Products</div>
+        <h1 class="ui-title serif-title">예금 비교</h1>
+        <p class="ui-sub">은행/상품명/기간으로 필터링해서 금리를 한눈에 비교해보세요.</p>
       </div>
 
       <!-- 탭 (미니멀 토글) -->
@@ -19,7 +19,7 @@
       </div>
 
       <!-- 필터 -->
-      <div class="box mb">
+      <div class="box ui-card mb">
         <div class="box-body">
           <div class="filter-grid">
             <div class="field">
@@ -54,14 +54,14 @@
 
             <div class="field">
               <label class="label">&nbsp;</label>
-              <button class="btn-solid w100" @click="handleFetchProducts" :disabled="loading">
+              <button class="ui-btn ui-btn-primary w100" @click="handleFetchProducts" :disabled="loading">
                 {{ loading ? '조회 중...' : '조회' }}
               </button>
             </div>
 
             <div class="field">
               <label class="label">&nbsp;</label>
-              <button class="btn-ghost w100" @click="resetFilters" :disabled="loading">
+              <button class="ui-btn ui-btn-ghost w100" @click="resetFilters" :disabled="loading">
                 초기화
               </button>
             </div>
@@ -76,7 +76,7 @@
       </div>
 
       <!-- 테이블 -->
-      <div v-else class="box">
+      <div v-else class="box ui-card">
         <div class="box-head">
           <div class="box-title">
             {{ activeTab === 'deposit' ? '정기예금' : '정기적금' }} 목록
@@ -198,31 +198,15 @@ onMounted(async () => {
 /* 배경 */
 .page {
   min-height: 100%;
-  background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+  background:
+    radial-gradient(900px 300px at 10% 0%, rgba(27, 95, 122, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
 }
 
 /* 헤더 */
 .head { margin-bottom: 14px; }
-.badge {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid #ededed;
-  background: #f6f6f6;
-  color: #333;
-  font-size: 12px;
-  font-weight: 900;
-}
-.title {
-  margin: 10px 0 6px;
-  font-size: 26px;
-  font-weight: 950;
-  letter-spacing: -0.4px;
-  color: #111;
-}
-.sub { margin: 0; font-size: 13px; color: #777; }
+.ui-title { margin: 10px 0 6px; }
+.ui-sub { margin: 0; }
 
 /* 탭 */
 .tabs {
@@ -232,38 +216,35 @@ onMounted(async () => {
   margin-bottom: 12px;
 }
 .tab {
-  height: 42px;
+  height: var(--btn-h);
   border-radius: 14px;
-  border: 1px solid #efefef;
-  background: #fff;
-  font-weight: 900;
-  color: #444;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 700;
+  color: var(--ink-soft);
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 8px 18px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-1);
 }
 .tab.active {
-  background: #111;
-  border-color: #111;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
 /* 박스 */
 .box {
-  background: #fff;
-  border: 1px solid #efefef;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.06);
 }
 .box-head {
   padding: 14px 14px 10px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
 }
-.box-title { font-weight: 900; letter-spacing: -0.2px; color: #111; }
+.box-title { font-weight: 700; letter-spacing: -0.2px; color: var(--ink); }
 .box-body { padding: 14px; }
 
 .mb { margin-bottom: 14px; }
@@ -276,55 +257,29 @@ onMounted(async () => {
   align-items: end;
 }
 .field { display: grid; gap: 6px; }
-.label { font-size: 12px; font-weight: 900; color: #111; }
+.label { font-size: 12px; font-weight: 700; color: var(--ink); }
 
 .input, .select {
   height: 42px;
-  border-radius: 12px;
-  border: 1px solid #eaeaea;
-  background: #fff;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
   padding: 0 12px;
   font-size: 14px;
   outline: none;
 }
 .input:focus, .select:focus {
-  border-color: #d8d8d8;
-  box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.06);
+  border-color: rgba(27, 95, 122, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(27, 95, 122, 0.15);
 }
 
-.btn-solid {
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid #111;
-  background: #111;
-  color: #fff;
-  font-weight: 900;
-  font-size: 13px;
-  padding: 0 14px;
-  cursor: pointer;
-}
-.btn-solid:hover { background: #000; }
-.btn-solid:disabled { opacity: .6; cursor: not-allowed; }
-
-.btn-ghost {
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
-  color: #222;
-  font-weight: 900;
-  font-size: 13px;
-  cursor: pointer;
-}
-.btn-ghost:hover { background: #fafafa; }
-.w100 { width: 100%; }
 
 /* 로딩 */
 .state { text-align: center; padding: 48px 0; }
-.state-sub { margin-top: 12px; color: #777; font-size: 13px; }
+.state-sub { margin-top: 12px; color: var(--muted); font-size: 13px; }
 
-.muted { color: #777; font-size: 13px; }
-.strong { color: #111; }
+.muted { color: var(--muted); font-size: 13px; }
+.strong { color: var(--ink); }
 
 /* 테이블 */
 .table-wrap { overflow-x: auto; }
@@ -336,22 +291,22 @@ onMounted(async () => {
 .t thead th {
   text-align: left;
   font-size: 12px;
-  font-weight: 900;
-  color: #111;
-  background: #fafafa;
-  border-bottom: 1px solid #efefef;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
   padding: 10px 10px;
   white-space: nowrap;
 }
 .t tbody td {
   font-size: 13px;
-  color: #444;
-  border-bottom: 1px solid #f2f2f2;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--border);
   padding: 10px 10px;
   vertical-align: middle;
 }
 .row-click { cursor: pointer; }
-.row-click:hover { background: #fafafa; }
+.row-click:hover { background: var(--bg-alt); }
 
 .num { text-align: right; white-space: nowrap; }
 .nowrap { white-space: nowrap; }
@@ -365,7 +320,7 @@ onMounted(async () => {
 /* empty */
 .empty {
   text-align: center;
-  color: #777;
+  color: var(--muted);
   padding: 22px 0;
 }
 
@@ -373,7 +328,7 @@ onMounted(async () => {
 .hint {
   margin-top: 10px;
   font-size: 12px;
-  color: #777;
+  color: var(--muted);
 }
 
 /* 반응형 */

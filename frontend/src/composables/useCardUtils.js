@@ -60,9 +60,9 @@ export function getRankBadgeClass(index) {
 
 // 점수 색상 클래스
 export function getScoreClass(score) {
-  if (score >= 0.8) return 'text-warning'
-  if (score >= 0.6) return 'text-primary'
-  return 'text-success'
+  if (score >= 0.8) return 'ui-text-warning'
+  if (score >= 0.6) return 'ui-text-accent'
+  return 'ui-text-success'
 }
 
 // 카드 타입 라벨
@@ -72,7 +72,7 @@ export function getCardTypeLabel(type) {
 
 // 카드 타입 뱃지 클래스
 export function getCardTypeBadgeClass(type) {
-  return type === 'CRD' ? 'bg-primary' : 'bg-success'
+  return type === 'CRD' ? 'ui-badge-primary' : 'ui-badge-success'
 }
 
 // 카테고리 코드 → 한글 변환

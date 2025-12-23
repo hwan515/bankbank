@@ -1,6 +1,6 @@
 <template>
   <!-- 작은 채팅창 -->
-  <div v-if="open" class="chat-window" role="dialog" aria-label="채팅 위젯">
+  <div v-if="open" class="chat-window ui-card" role="dialog" aria-label="채팅 위젯">
     <!-- 헤더 -->
     <div class="chat-header">
       <div class="h-left">
@@ -183,17 +183,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   width: 52px;
   height: 52px;
   border-radius: 999px;
-  border: 1px solid #e8e8e8;
-  background: #111;
+  border: 1px solid var(--border);
+  background: var(--accent);
   color: #fff;
   font-size: 20px;
   display: grid;
   place-items: center;
   cursor: pointer;
   z-index: 9999;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 18px 40px rgba(0,0,0,0.12);
+  box-shadow: var(--shadow-2);
 }
-.fab:hover { background: #000; }
+.fab:hover { background: var(--accent-strong); }
 
 /* Window */
 .chat-window {
@@ -202,12 +202,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   bottom: 80px;
   width: 360px;
   height: 520px;
-  background: #fff;
-  border: 1px solid #efefef;
   border-radius: 18px;
   overflow: hidden;
   z-index: 9999;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.16), 0 22px 60px rgba(0,0,0,0.10);
   display: grid;
   grid-template-rows: auto auto 1fr auto auto;
 }
@@ -215,7 +212,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 /* Header */
 .chat-header {
   padding: 12px 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -232,21 +229,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   background: #f97316;
   box-shadow: 0 0 0 4px rgba(249,115,22,0.14);
 }
-.h-title .t1 { font-weight: 950; color: #111; font-size: 14px; letter-spacing: -0.2px; }
-.h-title .t2 { font-size: 12px; color: #777; margin-top: 2px; }
+.h-title .t1 { font-weight: 700; color: var(--ink); font-size: 14px; letter-spacing: -0.2px; }
+.h-title .t2 { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
 .h-actions { display: flex; gap: 6px; }
 .icon-btn {
-  width: 34px;
-  height: 34px;
+  width: var(--btn-h-sm);
+  height: var(--btn-h-sm);
   border-radius: 10px;
-  border: 1px solid #efefef;
-  background: #fff;
-  color: #111;
-  font-weight: 900;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
   cursor: pointer;
 }
-.icon-btn:hover { background: #fafafa; }
+.icon-btn:hover { background: var(--bg-alt); }
 
 /* Tabs */
 .tabs {
@@ -256,17 +253,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   gap: 8px;
 }
 .tab {
-  height: 38px;
+  height: var(--btn-h-sm);
   border-radius: 12px;
-  border: 1px solid #efefef;
-  background: #fff;
-  font-weight: 900;
-  color: #444;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 700;
+  color: var(--ink-soft);
   cursor: pointer;
 }
 .tab.active {
-  background: #111;
-  border-color: #111;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -274,7 +271,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 .chat-body {
   padding: 12px;
   overflow: auto;
-  background: #fafafa;
+  background: var(--bg-alt);
 }
 .msg { display: flex; margin-bottom: 10px; }
 .msg.user { justify-content: flex-end; }
@@ -284,31 +281,31 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   max-width: 80%;
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid #efefef;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   font-size: 13px;
   line-height: 1.45;
-  color: #222;
+  color: var(--ink-soft);
   white-space: pre-line;
 }
 .msg.user .bubble {
-  background: #111;
-  border-color: #111;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
-.bubble.ghost { color: #777; }
+.bubble.ghost { color: var(--muted); }
 
 .sender {
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
   opacity: 0.75;
   margin-bottom: 4px;
 }
 
 /* Chat meta */
 .chat-meta {
-  border: 1px solid #efefef;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   border-radius: 14px;
   padding: 10px 12px;
   margin-bottom: 10px;
@@ -317,67 +314,67 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
 }
-.meta-row .label { font-weight: 900; color: #111; }
+.meta-row .label { font-weight: 700; color: var(--ink); }
 .meta-row .value.ok { color: #16a34a; font-weight: 900; }
 
 /* Input */
 .chat-input {
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border);
   padding: 10px;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
-  background: #fff;
+  background: var(--surface);
 }
 .input {
-  height: 40px;
-  border-radius: 12px;
-  border: 1px solid #eaeaea;
+  height: var(--btn-h);
+  border-radius: 999px;
+  border: 1px solid var(--border);
   padding: 0 12px;
   font-size: 14px;
   outline: none;
 }
 .input:focus {
-  border-color: #d8d8d8;
-  box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.06);
+  border-color: rgba(27, 95, 122, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(27, 95, 122, 0.15);
 }
 .send {
-  height: 40px;
-  border-radius: 12px;
-  border: 1px solid #111;
-  background: #111;
+  height: var(--btn-h);
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
   color: #fff;
-  font-weight: 900;
+  font-weight: 600;
   font-size: 13px;
   padding: 0 12px;
   cursor: pointer;
 }
-.send:hover { background: #000; }
+.send:hover { background: var(--accent-strong); }
 .send:disabled { opacity: .6; cursor: not-allowed; }
 
 /* footer buttons */
 .footer-actions {
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border);
   padding: 10px;
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  background: #fff;
+  background: var(--surface);
 }
 .mini-btn {
-  height: 34px;
+  height: var(--btn-h-sm);
   padding: 0 10px;
-  border-radius: 10px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
-  color: #111;
-  font-weight: 900;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
   font-size: 12px;
   cursor: pointer;
 }
-.mini-btn:hover { background: #fafafa; }
+.mini-btn:hover { background: var(--bg-alt); }
 .mini-btn.danger { color: #b91c1c; border-color: #f0d7d7; }
 
 /* Mobile */

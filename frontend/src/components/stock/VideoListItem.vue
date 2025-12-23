@@ -1,5 +1,5 @@
 <template>
-  <div class="video-card" @click="goDetail">
+  <div class="video-card ui-card" @click="goDetail">
     <!-- 썸네일 -->
     <div class="thumb-wrap">
       <img
@@ -66,9 +66,6 @@ const toggleFavorite = () => {
 <style scoped>
 /* 카드 전체 */
 .video-card {
-  background: #fff;
-  border: 1px solid #efefef;
-  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   display: flex;
@@ -77,17 +74,12 @@ const toggleFavorite = () => {
     transform 0.15s ease,
     box-shadow 0.15s ease,
     border-color 0.15s ease;
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.08),
-    0 8px 20px rgba(0,0,0,0.06);
 }
 
 .video-card:hover {
   transform: translateY(-2px);
-  border-color: #e3e3e3;
-  box-shadow:
-    0 2px 6px rgba(0,0,0,0.10),
-    0 14px 28px rgba(0,0,0,0.08);
+  border-color: rgba(27, 95, 122, 0.3);
+  box-shadow: var(--shadow-2);
 }
 
 /* 썸네일 */
@@ -107,27 +99,27 @@ const toggleFavorite = () => {
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 34px;
-  height: 34px;
+  width: var(--btn-h-sm);
+  height: var(--btn-h-sm);
   border-radius: 999px;
-  border: 1px solid #e8e8e8;
-  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.9);
   display: grid;
   place-items: center;
   cursor: pointer;
-  color: #666;
+  color: var(--ink-soft);
   transition: all 0.15s ease;
 }
 
 .fav-btn:hover {
   background: #fff;
-  color: #111;
+  color: var(--ink);
 }
 
 .fav-btn.on {
-  background: #111;
+  background: var(--accent);
   color: #ffd43b;
-  border-color: #111;
+  border-color: var(--accent);
 }
 
 /* 본문 */
@@ -140,8 +132,8 @@ const toggleFavorite = () => {
 /* 제목 */
 .title {
   font-size: 14px;
-  font-weight: 800;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -158,7 +150,7 @@ const toggleFavorite = () => {
 }
 
 .channel {
-  color: #777;
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -166,7 +158,7 @@ const toggleFavorite = () => {
 }
 
 .view-btn {
-  font-weight: 800;
-  color: #111;
+  font-weight: 700;
+  color: var(--accent);
 }
 </style>

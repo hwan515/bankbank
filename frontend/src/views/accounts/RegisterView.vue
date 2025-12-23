@@ -1,9 +1,9 @@
 <template>
   <div class="auth-page">
-    <div class="auth-card">
+    <div class="auth-card ui-card">
       <div class="head">
-        <div class="badge">Bankbook</div>
-        <h2 class="title">회원가입</h2>
+        <div class="ui-badge">Bankbook</div>
+        <h2 class="title serif-title">회원가입</h2>
         <p class="sub">정보를 입력해 계정을 만들어주세요.</p>
       </div>
 
@@ -93,7 +93,7 @@
           </label>
         </div>
 
-        <button class="btn-solid" type="submit" :disabled="loading">
+        <button class="ui-btn ui-btn-primary w100" type="submit" :disabled="loading">
           {{ loading ? '가입 중...' : '가입하기' }}
         </button>
 
@@ -169,19 +169,16 @@ const register = async () => {
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(900px 300px at 50% 0%, rgba(0,0,0,0.06), transparent 60%),
-    linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+    radial-gradient(900px 300px at 50% 0%, rgba(27, 95, 122, 0.12), transparent 60%),
+    linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
 }
 
 /* 카드: 우리 컨셉과 동일 */
 .auth-card {
   width: 100%;
   max-width: 520px;
-  background: #fff;
-  border: 1px solid #efefef;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   padding: 22px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.06);
 }
 
 /* 헤더 */
@@ -189,28 +186,19 @@ const register = async () => {
   margin-bottom: 16px;
 }
 
-.badge {
-  display: inline-block;
-  font-size: 12px;
-  color: #444;
-  background: #f6f6f6;
-  border: 1px solid #ededed;
-  padding: 6px 10px;
-  border-radius: 999px;
-}
 
 .title {
   margin: 10px 0 6px;
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.3px;
-  color: #111;
+  color: var(--ink);
 }
 
 .sub {
   margin: 0;
   font-size: 13px;
-  color: #777;
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -227,23 +215,23 @@ const register = async () => {
 
 .label {
   font-size: 12px;
-  font-weight: 800;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .input {
   height: 42px;
-  border-radius: 12px;
-  border: 1px solid #eaeaea;
-  background: #fff;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
   padding: 0 12px;
   font-size: 14px;
   outline: none;
 }
 
 .input:focus {
-  border-color: #d8d8d8;
-  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.06);
+  border-color: rgba(27, 95, 122, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(27, 95, 122, 0.15);
 }
 
 /* @ prefix */
@@ -258,16 +246,16 @@ const register = async () => {
   height: 42px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
-  border: 1px solid #eaeaea;
-  background: #fafafa;
-  color: #666;
-  font-weight: 900;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--ink-soft);
+  font-weight: 700;
 }
 
 .hint {
   font-size: 12px;
-  color: #888;
+  color: var(--muted);
 }
 
 /* 약관 */
@@ -280,7 +268,7 @@ const register = async () => {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #444;
+  color: var(--ink-soft);
   user-select: none;
 }
 
@@ -290,26 +278,6 @@ const register = async () => {
 }
 
 /* 버튼 */
-.btn-solid {
-  height: 44px;
-  border-radius: 14px;
-  border: 1px solid #111;
-  background: #111;
-  color: #fff;
-  font-weight: 900;
-  font-size: 14px;
-  cursor: pointer;
-  margin-top: 6px;
-}
-
-.btn-solid:hover {
-  background: #000;
-}
-
-.btn-solid:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 /* 하단 */
 .foot {
@@ -317,12 +285,12 @@ const register = async () => {
   justify-content: center;
   gap: 8px;
   font-size: 13px;
-  color: #777;
+  color: var(--muted);
 }
 
 .link {
-  color: #111;
-  font-weight: 900;
+  color: var(--ink);
+  font-weight: 700;
   text-decoration: none;
 }
 
