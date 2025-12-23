@@ -30,5 +30,6 @@ urlpatterns = [
     path('api/accounts/', include('accounts.urls')),
     path('api/metals/', include('charts.urls')),
     path("api/chat/", include("chats.urls")),
+    path("api/recommend/", include("recommend.urls")),
 ]
 

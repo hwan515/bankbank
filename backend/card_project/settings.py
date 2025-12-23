@@ -55,7 +55,9 @@ METAL_PRICE_FILES = {
 }
 
 INSTALLED_APPS = [
+    'recommend',
     'stocks',
+    "card_source",
     'accounts',
     'products',
     'banks',
@@ -133,9 +135,14 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+    },
+    "card_source": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "card_gorilla_master_rank.db",  # 파일 위치 맞춰!
     }
 }
 
+DATABASE_ROUTERS = ["card_project.db_router.CardSourceRouter"]
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.mysql', 
