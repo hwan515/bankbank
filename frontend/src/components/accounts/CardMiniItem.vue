@@ -19,6 +19,8 @@
 </template>
 
 <script setup>
+import placeholderImg from '@/assets/card-placeholder.svg'
+
 defineProps({
   card: {
     type: Object,
@@ -33,7 +35,8 @@ defineProps({
 defineEmits(['click'])
 
 function handleImageError(e) {
-  e.target.src = 'https://via.placeholder.com/120x80?text=Card'
+  e.target.onerror = null
+  e.target.src = placeholderImg
 }
 </script>
 

@@ -9,6 +9,7 @@ urlpatterns = [
 
     # AI 추천
     path('card-recommendation/', views.card_recommend, name='card-recommendation'),
+    path('recommend/personalized/', views.personalized_recommend, name='personalized-recommend'),
 
     # 사용자 행동 로그
     path('events/', views.card_event, name='card-event'),

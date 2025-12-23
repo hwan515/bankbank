@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'products',
     'banks',
     'cards',
+    'community',
     'chats',
     'charts',
     'rest_framework',

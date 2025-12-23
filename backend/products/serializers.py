@@ -56,3 +56,15 @@ class SavingProductsListSerializer(serializers.ModelSerializer):
         model = SavingProducts
         fields = ['id', 'dcls_month', 'fin_prdt_cd', 'kor_co_nm', 'fin_prdt_nm',
                   'intr_rate_6', 'intr_rate_12', 'intr_rate_24', 'intr_rate_36']
+
+
+class SimpleDepositProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DepositProducts
+        fields = ['id', 'fin_prdt_nm', 'kor_co_nm']
+
+
+class SimpleSavingProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavingProducts
+        fields = ['id', 'fin_prdt_nm', 'kor_co_nm']

@@ -127,6 +127,18 @@
         :profile="userProfile"
         @save="handleSavePreference"
       />
+
+      <div class="personal-recommend">
+        <div class="personal-header">
+          <div>
+            <div class="personal-title">선호도 기반 카드 추천 받기</div>
+            <p class="personal-desc">설정한 선호도를 바탕으로 카드 페이지에서 바로 추천을 받아보세요.</p>
+          </div>
+          <router-link class="btn-link" :to="{ path: '/cards', query: { tab: 'recommend', mode: 'personal' } }">
+            카드 페이지로 이동
+          </router-link>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -329,5 +341,34 @@ async function handleSavePreference(data) {
 .history-cards {
   display: grid;
   gap: 8px;
+}
+
+.personal-recommend {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #efefef;
+  border-radius: 12px;
+  background: #f8f8f8;
+}
+
+.personal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.personal-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+}
+
+.personal-desc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #666;
 }
 </style>

@@ -7,6 +7,7 @@ export const useCardsStore = defineStore('cards', () => {
   const cards = ref([])
   const currentCard = ref(null)
   const recommendedCards = ref([])
+  const personalizedRecommendations = ref([])
   const companies = ref([])
   const isLoading = ref(false)
   const error = ref(null)
@@ -99,6 +100,19 @@ export const useCardsStore = defineStore('cards', () => {
       throw err
     } finally {
       isLoading.value = false
+    }
+  }
+
+  // 선호도 기반 카드 추천 (로그인 사용자)
+  async function getPersonalizedRecommendations(params = {}) {
+    try {
+      const response = await api.get('/cards/recommend/personalized/', { params })
+      personalizedRecommendations.value = response.data.results || []
+      return response.data
+    } catch (err) {
+      console.error('개인화 추천 조회 실패:', err)
+      personalizedRecommendations.value = []
+      throw err
     }
   }
 
@@ -214,6 +228,7 @@ export const useCardsStore = defineStore('cards', () => {
     error,
     lastQuery,
     pagination,
+    personalizedRecommendations,
     // 마이페이지 상태
     likedCards,
     recentCards,
@@ -224,6 +239,7 @@ export const useCardsStore = defineStore('cards', () => {
     fetchCards,
     fetchCardDetail,
     getRecommendations,
+    getPersonalizedRecommendations,
     clearRecommendations,
     clearCurrentCard,
     // 마이페이지 함수

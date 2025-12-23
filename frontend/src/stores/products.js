@@ -12,6 +12,8 @@ export const useProductsStore = defineStore('products', () => {
   const allDepositProducts = ref([]) // 전체 예금 목록 캐시
   const allSavingProducts = ref([]) // 전체 적금 목록 캐시
   const banks = ref([])
+  const subscribedDeposits = ref([])
+  const subscribedSavings = ref([])
 
   // 캐시 타임스탬프
   const cacheTimestamps = ref({
@@ -28,6 +30,8 @@ export const useProductsStore = defineStore('products', () => {
   const loading = ref(false)
   const subscribing = ref(false)
   const error = ref(null)
+  const subscriptionsLoading = ref(false)
+  const subscriptionsError = ref(null)
 
   // 캐시 만료 여부 확인
   function isCacheExpired(key) {
@@ -163,6 +167,15 @@ export const useProductsStore = defineStore('products', () => {
       const response = await api.post(endpoint)
       isSubscribed.value = response.data.subscribed
 
+      // 가입 해제 시 가입 목록에서 제거
+      if (!response.data.subscribed) {
+        if (productType === 'deposit') {
+          subscribedDeposits.value = subscribedDeposits.value.filter((p) => p.id !== productId)
+        } else {
+          subscribedSavings.value = subscribedSavings.value.filter((p) => p.id !== productId)
+        }
+      }
+
       return {
         success: true,
         subscribed: response.data.subscribed,
@@ -190,6 +203,23 @@ export const useProductsStore = defineStore('products', () => {
     error.value = null
   }
 
+  // 가입 목록 조회
+  async function fetchSubscriptions() {
+    subscriptionsLoading.value = true
+    subscriptionsError.value = null
+    try {
+      const res = await api.get('/products/subscriptions/')
+      subscribedDeposits.value = res.data.deposits || []
+      subscribedSavings.value = res.data.savings || []
+      return res.data
+    } catch (e) {
+      subscriptionsError.value = e.message
+      throw e
+    } finally {
+      subscriptionsLoading.value = false
+    }
+  }
+
   return {
     // State
     depositProducts,
@@ -200,6 +230,10 @@ export const useProductsStore = defineStore('products', () => {
     loading,
     subscribing,
     error,
+    subscribedDeposits,
+    subscribedSavings,
+    subscriptionsLoading,
+    subscriptionsError,
 
     // Actions
     fetchBanks,
@@ -208,6 +242,7 @@ export const useProductsStore = defineStore('products', () => {
     checkSubscription,
     toggleSubscription,
     clearCurrentProduct,
-    clearError
+    clearError,
+    fetchSubscriptions
   }
 })
