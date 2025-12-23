@@ -1,54 +1,60 @@
 <template>
   <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal-content rounded-4 shadow">
-      <div class="modal-header p-4 pb-3 border-bottom-0">
-        <h1 class="fw-bold mb-0 fs-4">개인정보 수정</h1>
-        <button type="button" class="btn-close" aria-label="Close" @click="emit('close')"></button>
-      </div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-label="개인정보 수정">
+      <header class="modal-header">
+        <div>
+          <h1 class="title">개인정보 수정</h1>
+          <p class="subtitle">이메일과 인사말을 업데이트할 수 있어요.</p>
+        </div>
 
-      <div class="modal-body p-4 pt-0">
-        <form @submit.prevent="submit">
-          <div class="form-floating mb-3">
+        <button type="button" class="icon-btn" aria-label="Close" @click="emit('close')">✕</button>
+      </header>
+
+      <div class="modal-body">
+        <form @submit.prevent="submit" class="form">
+          <div class="field">
+            <label class="label" for="floatingUsername">닉네임</label>
             <input
               v-model.trim="form.username"
               type="text"
-              class="form-control rounded-3"
+              class="input"
               id="floatingUsername"
               placeholder="username"
-              disabled="true"
+              disabled
             />
-            <label for="floatingUsername">닉네임</label>
+            <div class="help">닉네임은 변경할 수 없어요.</div>
           </div>
 
-          <div class="form-floating mb-3">
+          <div class="field">
+            <label class="label" for="floatingEmail">이메일</label>
             <input
               v-model.trim="form.email"
               type="email"
-              class="form-control rounded-3"
+              class="input"
               id="floatingEmail"
               placeholder="name@example.com"
             />
-            <label for="floatingEmail">이메일</label>
           </div>
 
-          <div class="form-floating mb-3">
+          <div class="field">
+            <label class="label" for="floatingGreeting">인사말</label>
             <textarea
               v-model.trim="form.greeting"
-              class="form-control rounded-3"
+              class="textarea"
               id="floatingGreeting"
-              placeholder="인사말"
-              style="height: 110px"
+              placeholder="간단한 한 줄 소개를 적어주세요."
+              rows="4"
             />
-            <label for="floatingGreeting">인사말</label>
           </div>
 
-          <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" type="submit" :disabled="saving">
-            {{ saving ? '저장 중...' : '저장' }}
-          </button>
-
-          <button class="w-100 btn btn-lg rounded-3 btn-outline-secondary" type="button" @click="emit('close')">
-            취소
-          </button>
+          <div class="actions">
+            <button class="btn solid" type="submit" :disabled="saving">
+              {{ saving ? '저장 중...' : '저장' }}
+            </button>
+            <button class="btn ghost" type="button" @click="emit('close')">
+              취소
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -91,7 +97,7 @@ const submit = () => {
   })
 }
 
-// ESC로 닫기 (모달만 영향)
+// ESC로 닫기
 const onKeydown = (e) => {
   if (e.key === 'Escape') emit('close')
 }
@@ -100,7 +106,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <style scoped>
-/* ✅ 프로필 레이아웃 건드리지 않게 모달만 fixed + 높은 z-index */
+/* overlay */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -111,9 +117,143 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   padding: 24px;
 }
 
-.modal-content {
+/* panel */
+.modal-panel {
   width: min(520px, 100%);
   background: #fff;
   border: 1px solid #eee;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 16px 18px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: #111;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #777;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #222;
+}
+.icon-btn:hover {
+  background: #fafafa;
+}
+
+/* body */
+.modal-body {
+  padding: 16px 18px 18px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  color: #111;
+}
+
+.textarea {
+  resize: none;
+  min-height: 110px;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: #cfcfcf;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.input:disabled {
+  background: #fafafa;
+  color: #666;
+}
+
+.help {
+  font-size: 11px;
+  color: #888;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* buttons */
+.btn {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn.solid {
+  background: #111;
+  color: #fff;
+}
+.btn.solid:hover {
+  background: #000;
+}
+.btn.solid:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn.ghost {
+  background: #fff;
+  border-color: #e7e7e7;
+  color: #111;
+}
+.btn.ghost:hover {
+  background: #fafafa;
 }
 </style>
