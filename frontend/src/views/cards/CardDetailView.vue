@@ -1,24 +1,25 @@
 <template>
-  <div class="container py-5">
+  <div class="page">
+    <div class="container py-5">
     <!-- 로딩 -->
     <LoadingSpinner v-if="isLoading" message="카드 정보를 불러오는 중..." />
 
       <!-- 에러 -->
       <div v-else-if="error" class="state">
         <div class="alert alert-danger">{{ error }}</div>
-        <button class="btn-mini" @click="$router.back()">뒤로 가기</button>
+        <button class="ui-btn ui-btn-primary" @click="$router.back()">뒤로 가기</button>
       </div>
 
       <!-- 카드 상세 -->
       <div v-else-if="card">
         <!-- 뒤로 가기 -->
-        <button class="btn-mini ghost mb-3" @click="$router.back()">← 목록으로</button>
+        <button class="ui-btn ui-btn-ghost mb-3" @click="$router.back()">← 목록으로</button>
 
       <div class="row g-5">
         <!-- 왼쪽: 카드 이미지 -->
         <div class="col-lg-5">
-          <div class="card shadow">
-            <div class="card-body text-center p-5 bg-light">
+          <div class="card ui-card">
+            <div class="card-body text-center p-5 ui-card-soft">
               <CardImage
                 :src="card.image_url"
                 :alt="card.name"
@@ -28,30 +29,30 @@
           </div>
 
           <!-- 기본 정보 카드 -->
-          <div class="card shadow mt-4">
-            <div class="card-header bg-white">
+          <div class="card ui-card mt-4">
+            <div class="card-header">
               <h5 class="mb-0">기본 정보</h5>
             </div>
             <ul class="list-group list-group-flush">
               <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">카드사</span>
+                <span class="ui-sub">카드사</span>
                 <strong>{{ card.company }}</strong>
               </li>
               <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">카드 종류</span>
+                <span class="ui-sub">카드 종류</span>
                 <strong>{{ getCardTypeLabel(card.card_type) }}</strong>
               </li>
               <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">연회비</span>
+                <span class="ui-sub">연회비</span>
                 <strong>{{ card.annual_fee || '정보 없음' }}</strong>
               </li>
               <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">전월실적</span>
+                <span class="ui-sub">전월실적</span>
                 <strong>{{ formatSpending(card.min_spending) }}</strong>
               </li>
               <li v-if="card.ranking" class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">인기 순위</span>
-                <strong class="text-warning">{{ card.ranking }}위</strong>
+                <span class="ui-sub">인기 순위</span>
+                <strong class="ui-badge ui-badge-warning">{{ card.ranking }}위</strong>
               </li>
             </ul>
           </div>
@@ -62,16 +63,16 @@
           <!-- 카드명 -->
           <div class="mb-4">
             <div class="d-flex align-items-center gap-2 mb-2">
-              <span class="badge bg-secondary">{{ card.company }}</span>
-              <span class="badge" :class="getCardTypeBadgeClass(card.card_type)">
+              <span class="ui-badge">{{ card.company }}</span>
+              <span class="ui-badge" :class="getCardTypeBadgeClass(card.card_type)">
                 {{ getCardTypeLabel(card.card_type) }}
               </span>
-              <span v-if="card.category" class="badge bg-info">{{ card.category }}</span>
+              <span v-if="card.category" class="ui-badge ui-badge-info">{{ card.category }}</span>
 
               <!-- 좋아요 버튼 -->
               <button
-                class="btn-like"
-                :class="{ 'liked': card.is_liked }"
+                class="btn-like ui-btn"
+                :class="card.is_liked ? 'liked' : 'ui-btn-ghost'"
                 @click="handleLikeToggle"
                 :disabled="likeLoading"
               >
@@ -81,7 +82,7 @@
             </div>
 
             <!-- 주요 혜택 -->
-            <div class="box mb">
+            <div class="box ui-card mb">
               <div class="box-head">
                 <div class="box-title">주요 혜택</div>
               </div>
@@ -92,7 +93,7 @@
             </div>
 
             <!-- 혜택 요약 -->
-            <div v-if="card.benefits_summary" class="box mb">
+            <div v-if="card.benefits_summary" class="box ui-card mb">
               <div class="box-head">
                 <div class="box-title">혜택 요약</div>
               </div>
@@ -102,7 +103,7 @@
             </div>
 
             <!-- 상세 혜택 -->
-            <div v-if="card.benefits_json && card.benefits_json.length" class="box mb">
+            <div v-if="card.benefits_json && card.benefits_json.length" class="box ui-card mb">
               <div class="box-head">
                 <div class="box-title">상세 혜택</div>
               </div>
@@ -144,7 +145,7 @@
             </div>
 
             <!-- 구조화된 혜택 -->
-            <div v-if="card.structured_benefit && card.structured_benefit.length" class="box">
+            <div v-if="card.structured_benefit && card.structured_benefit.length" class="box ui-card">
               <div class="box-head">
                 <div class="box-title">혜택 카테고리</div>
               </div>
@@ -153,7 +154,7 @@
                 <div class="sb-grid">
                   <div v-for="(sb, index) in card.structured_benefit" :key="index" class="sb">
                     <div class="sb-top">
-                      <span class="badge dark">{{ getCategoryName(sb.category) }}</span>
+                      <span class="ui-badge ui-badge-primary">{{ getCategoryName(sb.category) }}</span>
                       <strong class="sb-name">{{ sb.brand || sb.name || '' }}</strong>
                     </div>
                     <div class="sb-rate">{{ sb.rate || sb.benefit || '' }}</div>
@@ -165,6 +166,7 @@
 
           </div>
         </div>
+      </div>
       </div>
 
     </div>
@@ -229,7 +231,9 @@ async function handleLikeToggle() {
 <style scoped>
 /* 배경 톤 통일 */
 .page {
-  background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+  background:
+    radial-gradient(900px 300px at 10% 0%, rgba(27, 95, 122, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
   min-height: 100%;
 }
 
@@ -240,44 +244,15 @@ async function handleLikeToggle() {
 }
 .state-sub {
   margin-top: 12px;
-  color: #777;
+  color: var(--muted);
   font-size: 13px;
 }
 
 /* 미니멀 버튼 */
-.btn-mini {
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 1px solid #111;
-  background: #111;
-  color: #fff;
-  font-weight: 900;
-  font-size: 13px;
-  cursor: pointer;
-}
-.btn-mini:hover { background: #000; }
-.btn-mini.ghost {
-  background: #fff;
-  color: #111;
-  border-color: #e8e8e8;
-}
-.btn-mini.ghost:hover { background: #fafafa; }
-
 /* 좋아요 버튼 */
 .btn-like {
-  display: inline-flex;
-  align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 999px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
-  color: #666;
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
   transition: all 0.15s ease;
 }
 .btn-like:hover {
@@ -307,20 +282,17 @@ async function handleLikeToggle() {
 
 /* 공통 박스(카드) */
 .box {
-  background: #fff;
-  border: 1px solid #efefef;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.06);
 }
 .box-head {
   padding: 14px 14px 10px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
 }
 .box-title {
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.2px;
-  color: #111;
+  color: var(--ink);
 }
 .box-body { padding: 14px; }
 
@@ -330,7 +302,7 @@ async function handleLikeToggle() {
 /* 이미지 영역 */
 .img-area {
   padding: 18px;
-  background: #fafafa;
+  background: var(--bg-alt);
   display: grid;
   place-items: center;
 }
@@ -343,38 +315,22 @@ async function handleLikeToggle() {
 /* 헤더 */
 .header { margin-bottom: 12px; }
 .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.badge {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid #ededed;
-  background: #f6f6f6;
-  color: #333;
-  font-size: 12px;
-  font-weight: 900;
-}
-.badge.primary { background: #111; border-color: #111; color: #fff; }
-.badge.success { background: #0f5132; border-color: #0f5132; color: #fff; }
-.badge.subtle { background: #fff; }
-.badge.dark { background: #111; border-color: #111; color: #fff; }
 
 .h1 {
   margin: 0;
   font-size: 26px;
-  font-weight: 950;
+  font-weight: 700;
   letter-spacing: -0.4px;
-  color: #111;
+  color: var(--ink);
 }
 
 .lead {
   margin: 0;
   font-size: 14px;
-  color: #222;
+  color: var(--ink-soft);
   line-height: 1.6;
 }
-.muted { color: #777; margin: 0; }
+.muted { color: var(--muted); margin: 0; }
 .pre-line { white-space: pre-line; }
 
 /* Key-Value */
@@ -384,17 +340,17 @@ async function handleLikeToggle() {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid #f2f2f2;
+  border-bottom: 1px solid var(--border);
 }
 .kv-row:last-child { border-bottom: 0; }
-.k { color: #777; font-size: 13px; }
-.v { color: #111; font-size: 13px; font-weight: 900; }
+.k { color: var(--muted); font-size: 13px; }
+.v { color: var(--ink); font-size: 13px; font-weight: 700; }
 .rank { color: #b7791f; }
 
 /* accordion 미니멀 톤(부트스트랩 기본 유지, 컬러만 약하게) */
 .accordion-button:not(.collapsed) {
-  background-color: #f6f6f6;
-  color: #111;
+  background-color: var(--bg-alt);
+  color: var(--ink);
 }
 
 /* structured benefit grid */
@@ -407,10 +363,10 @@ async function handleLikeToggle() {
   .sb-grid { grid-template-columns: 1fr; }
 }
 .sb {
-  border: 1px solid #efefef;
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px;
-  background: #fff;
+  background: var(--surface);
 }
 .sb-top {
   display: flex;
@@ -420,17 +376,17 @@ async function handleLikeToggle() {
 }
 .sb-name {
   font-size: 13px;
-  color: #111;
-  font-weight: 900;
+  color: var(--ink);
+  font-weight: 700;
 }
 .sb-rate {
   font-size: 13px;
-  color: #111;
-  font-weight: 900;
+  color: var(--ink);
+  font-weight: 700;
   margin-bottom: 6px;
 }
 .sb-cond {
   font-size: 12px;
-  color: #777;
+  color: var(--muted);
 }
 </style>

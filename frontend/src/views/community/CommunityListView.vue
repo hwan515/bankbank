@@ -3,14 +3,14 @@
     <header class="hero">
       <div>
         <p class="eyebrow">커뮤니티</p>
-        <h1 class="title">금융 경험을 나누세요</h1>
+        <h1 class="hero-title serif-title">금융 경험을 나누세요</h1>
         <p class="sub">
           예적금 · 카드 사용 후기를 공유하고 궁금한 점을 질문해 보세요.
         </p>
       </div>
       <button
         v-if="accountStore.isLogin"
-        class="btn-solid"
+        class="ui-btn ui-btn-primary"
         @click="goWrite"
       >
         새 글쓰기
@@ -18,7 +18,7 @@
       <RouterLink
         v-else
         :to="{ name: 'login' }"
-        class="btn-ghost"
+        class="ui-btn ui-btn-ghost"
       >
         로그인하고 글쓰기
       </RouterLink>
@@ -36,7 +36,7 @@
       </button>
     </div>
 
-    <div class="board card">
+    <div class="board card ui-card">
       <div class="board-head">
         <div class="left">
           <h3 class="board-title">{{ currentTab.label }}</h3>
@@ -45,7 +45,7 @@
       </div>
 
       <div v-if="loading" class="empty">목록을 불러오는 중입니다...</div>
-      <div v-else-if="error" class="empty text-danger">오류: {{ error }}</div>
+      <div v-else-if="error" class="empty ui-text-danger">오류: {{ error }}</div>
       <div v-else-if="!posts.length" class="empty">아직 작성된 글이 없습니다.</div>
 
       <div v-else class="list">
@@ -61,7 +61,7 @@
           @click="goDetail(post.id)"
         >
           <div class="title-wrap">
-            <span class="title">{{ post.title }}</span>
+            <span class="row-title">{{ post.title }}</span>
             <span class="meta">댓글 {{ post.comment_count }}</span>
           </div>
           <span class="author">{{ post.author_name }}</span>
@@ -142,20 +142,20 @@ const formatDate = (value) => {
   font-size: 12px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #666;
+  color: var(--muted);
   margin-bottom: 4px;
 }
 
-.title {
-  font-size: 28px;
-  font-weight: 900;
+.hero-title {
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 700;
   margin: 0;
-  color: #0e0e0e;
+  color: var(--ink);
 }
 
 .sub {
   margin: 6px 0 0;
-  color: #666;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -167,37 +167,36 @@ const formatDate = (value) => {
 }
 
 .tab {
-  border: 1px solid #e8e8e8;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   border-radius: 12px;
-  padding: 12px 14px;
+  height: var(--btn-h);
+  padding: 0 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: 800;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
   transition: all 0.15s ease;
+  box-shadow: var(--shadow-1);
 }
 
 .tab .pill {
-  background: #f4f4f4;
+  background: var(--bg-alt);
   border-radius: 999px;
   padding: 6px 10px;
   font-size: 12px;
-  color: #444;
+  color: var(--ink-soft);
 }
 
 .tab.active {
-  border-color: #111;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-2);
 }
 
 .board {
-  border: 1px solid #eaeaea;
-  background: #fff;
   border-radius: 14px;
   padding: 14px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
 .board-head {
@@ -205,21 +204,21 @@ const formatDate = (value) => {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 10px;
   margin-bottom: 8px;
 }
 
 .board-title {
   margin: 0;
-  font-weight: 900;
+  font-weight: 700;
   font-size: 18px;
 }
 
 .board-sub {
   margin: 2px 0 0;
   font-size: 13px;
-  color: #777;
+  color: var(--muted);
 }
 
 .list {
@@ -237,13 +236,13 @@ const formatDate = (value) => {
 
 .list-head {
   font-size: 12px;
-  color: #777;
+  color: var(--muted);
   padding: 4px 10px;
 }
 
 .list-row {
-  background: #fafafa;
-  border: 1px solid #efefef;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px;
   transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
@@ -252,8 +251,8 @@ const formatDate = (value) => {
 
 .list-row:hover {
   transform: translateY(-2px);
-  border-color: #e3e3e3;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+  border-color: rgba(27, 95, 122, 0.3);
+  box-shadow: var(--shadow-2);
 }
 
 .title-wrap {
@@ -263,17 +262,17 @@ const formatDate = (value) => {
   flex-wrap: wrap;
 }
 
-.title {
-  font-weight: 800;
+.row-title {
+  font-weight: 700;
   font-size: 15px;
   margin: 0;
 }
 
 .meta {
   font-size: 12px;
-  color: #666;
-  background: #fff;
-  border: 1px solid #ededed;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 999px;
   padding: 2px 8px;
 }
@@ -281,35 +280,15 @@ const formatDate = (value) => {
 .author,
 .date {
   font-size: 13px;
-  color: #444;
+  color: var(--ink-soft);
 }
 
 .empty {
   padding: 20px 10px;
   text-align: center;
-  color: #666;
+  color: var(--muted);
 }
 
-.btn-solid,
-.btn-ghost,
-.btn-line {
-  border-radius: 12px;
-  font-weight: 800;
-  padding: 10px 14px;
-  border: 1px solid #111;
-  background: #111;
-  color: #fff;
-  text-decoration: none;
-}
-
-.btn-ghost {
-  background: #fff;
-  color: #111;
-}
-
-.btn-line {
-  background: #fff;
-}
 
 @media (max-width: 768px) {
   .hero {

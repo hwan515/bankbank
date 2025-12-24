@@ -49,7 +49,7 @@
       <div v-else-if="likedCards.length === 0" class="empty">
         <i class="bi bi-heart"></i>
         <p>좋아요한 카드가 없습니다.</p>
-        <router-link to="/cards" class="btn-link">카드 둘러보기</router-link>
+        <router-link to="/cards" class="ui-btn ui-btn-primary">카드 둘러보기</router-link>
       </div>
       <div v-else class="card-list">
         <CardMiniItem
@@ -70,7 +70,7 @@
       <div v-else-if="recentCards.length === 0" class="empty">
         <i class="bi bi-clock"></i>
         <p>최근 본 카드가 없습니다.</p>
-        <router-link to="/cards" class="btn-link">카드 둘러보기</router-link>
+        <router-link to="/cards" class="ui-btn ui-btn-primary">카드 둘러보기</router-link>
       </div>
       <div v-else class="card-list">
         <CardMiniItem
@@ -91,13 +91,13 @@
       <div v-else-if="recommendationHistory.length === 0" class="empty">
         <i class="bi bi-stars"></i>
         <p>추천 이력이 없습니다.</p>
-        <router-link to="/cards?tab=recommend" class="btn-link">AI 추천 받기</router-link>
+        <router-link to="/cards?tab=recommend" class="ui-btn ui-btn-primary">AI 추천 받기</router-link>
       </div>
       <div v-else class="history-list">
         <div
           v-for="log in recommendationHistory"
           :key="log.id"
-          class="history-item"
+          class="history-item ui-card"
         >
           <div class="history-header">
             <div class="history-query">"{{ log.query_text }}"</div>
@@ -128,13 +128,13 @@
         @save="handleSavePreference"
       />
 
-      <div class="personal-recommend">
+      <div class="personal-recommend ui-card">
         <div class="personal-header">
           <div>
             <div class="personal-title">선호도 기반 카드 추천 받기</div>
             <p class="personal-desc">설정한 선호도를 바탕으로 카드 페이지에서 바로 추천을 받아보세요.</p>
           </div>
-          <router-link class="btn-link" :to="{ path: '/cards', query: { tab: 'recommend', mode: 'personal' } }">
+          <router-link class="ui-btn ui-btn-ghost" :to="{ path: '/cards', query: { tab: 'recommend', mode: 'personal' } }">
             카드 페이지로 이동
           </router-link>
         </div>
@@ -200,7 +200,7 @@ async function handleSavePreference(data) {
 .card-section {
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid #efefef;
+  border-top: 1px solid var(--border);
 }
 
 .section-header {
@@ -208,8 +208,8 @@ async function handleSavePreference(data) {
 }
 
 .section-title {
-  font-weight: 800;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
   margin: 0;
 }
 
@@ -225,12 +225,12 @@ async function handleSavePreference(data) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 18px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
-  color: #555;
+  height: var(--btn-h-sm);
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-soft);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -238,12 +238,12 @@ async function handleSavePreference(data) {
 }
 
 .tab:hover {
-  border-color: #ccc;
+  border-color: rgba(27, 95, 122, 0.4);
 }
 
 .tab.active {
-  background: #111;
-  border-color: #111;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -263,7 +263,7 @@ async function handleSavePreference(data) {
   justify-content: center;
   gap: 8px;
   padding: 40px 0;
-  color: #888;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -271,7 +271,7 @@ async function handleSavePreference(data) {
 .empty {
   text-align: center;
   padding: 40px 20px;
-  color: #888;
+  color: var(--muted);
 }
 
 .empty i {
@@ -285,21 +285,6 @@ async function handleSavePreference(data) {
   font-size: 14px;
 }
 
-.btn-link {
-  display: inline-block;
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: #111;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.btn-link:hover {
-  background: #000;
-  color: #fff;
-}
 
 /* 카드 리스트 */
 .card-list {
@@ -315,9 +300,8 @@ async function handleSavePreference(data) {
 
 .history-item {
   padding: 14px;
-  border: 1px solid #efefef;
   border-radius: 12px;
-  background: #fafafa;
+  background: var(--bg-alt);
 }
 
 .history-header {
@@ -330,12 +314,12 @@ async function handleSavePreference(data) {
 .history-query {
   font-size: 14px;
   font-weight: 600;
-  color: #111;
+  color: var(--ink);
 }
 
 .history-date {
   font-size: 12px;
-  color: #888;
+  color: var(--muted);
 }
 
 .history-cards {
@@ -346,9 +330,8 @@ async function handleSavePreference(data) {
 .personal-recommend {
   margin-top: 16px;
   padding: 14px;
-  border: 1px solid #efefef;
   border-radius: 12px;
-  background: #f8f8f8;
+  background: var(--bg-alt);
 }
 
 .personal-header {
@@ -363,12 +346,12 @@ async function handleSavePreference(data) {
 .personal-title {
   font-size: 14px;
   font-weight: 700;
-  color: #111;
+  color: var(--ink);
 }
 
 .personal-desc {
   margin: 4px 0 0;
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
 }
 </style>

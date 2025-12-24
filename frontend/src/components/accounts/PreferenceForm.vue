@@ -67,7 +67,7 @@
 
     <div class="form-actions">
       <button
-        class="btn-save"
+        class="ui-btn ui-btn-primary w100"
         @click="handleSave"
         :disabled="saving"
       >
@@ -157,13 +157,13 @@ async function handleSave() {
 
 .section-title {
   font-weight: 700;
-  color: #111;
+  color: var(--ink);
   margin-bottom: 4px;
 }
 
 .section-desc {
   font-size: 12px;
-  color: #888;
+  color: var(--muted);
   margin-bottom: 12px;
 }
 
@@ -175,7 +175,7 @@ async function handleSave() {
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: var(--ink-soft);
   margin-bottom: 6px;
 }
 
@@ -183,15 +183,16 @@ async function handleSave() {
   width: 100%;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 14px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .form-select:focus {
   outline: none;
-  border-color: #111;
+  border-color: rgba(27, 95, 122, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(27, 95, 122, 0.15);
 }
 
 .category-grid {
@@ -208,15 +209,15 @@ async function handleSave() {
 
 .category-item {
   padding: 10px 12px;
-  border: 1px solid #efefef;
-  border-radius: 8px;
-  background: #fafafa;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-alt);
 }
 
 .category-label {
   font-size: 12px;
   font-weight: 600;
-  color: #333;
+  color: var(--ink-soft);
   margin-bottom: 6px;
 }
 
@@ -234,7 +235,7 @@ async function handleSave() {
 .category-value {
   font-size: 13px;
   font-weight: 700;
-  color: #111;
+  color: var(--ink);
   min-width: 20px;
   text-align: right;
 }
@@ -243,27 +244,6 @@ async function handleSave() {
   margin-top: 20px;
 }
 
-.btn-save {
-  width: 100%;
-  height: 44px;
-  border: none;
-  border-radius: 10px;
-  background: #111;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.btn-save:hover {
-  background: #000;
-}
-
-.btn-save:disabled {
-  background: #999;
-  cursor: not-allowed;
-}
 
 .save-message {
   margin-top: 12px;

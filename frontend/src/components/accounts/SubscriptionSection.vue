@@ -1,12 +1,12 @@
 <template>
-  <section class="sub-section">
+  <section class="sub-section ui-card">
     <div class="head">
       <div>
         <p class="eyebrow">가입한 상품</p>
-        <h2 class="title">내 예·적금</h2>
+        <h2 class="title serif-title">내 예·적금</h2>
         <p class="sub">가입한 금융 상품을 확인하고 해제할 수 있습니다.</p>
       </div>
-      <button class="btn-line" @click="refresh" :disabled="loading">
+      <button class="ui-btn ui-btn-ghost" @click="refresh" :disabled="loading">
         {{ loading ? '불러오는 중...' : '새로고침' }}
       </button>
     </div>
@@ -14,7 +14,7 @@
     <div v-if="error" class="alert alert-danger small mb-3">오류: {{ error }}</div>
 
     <div class="grid">
-      <div class="card">
+      <div class="card ui-card">
         <div class="card-head">
           <h3>정기예금</h3>
           <span class="pill">{{ deposits.length }}개</span>
@@ -33,7 +33,7 @@
         </ul>
       </div>
 
-      <div class="card">
+      <div class="card ui-card">
         <div class="card-head">
           <h3>적금</h3>
           <span class="pill">{{ savings.length }}개</span>
@@ -85,11 +85,8 @@ onMounted(refresh)
 <style scoped>
 .sub-section {
   margin-top: 24px;
-  border: 1px solid #ececec;
   border-radius: 14px;
   padding: 16px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.05);
 }
 
 .head {
@@ -102,7 +99,7 @@ onMounted(refresh)
 
 .eyebrow {
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
   margin: 0;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -111,12 +108,13 @@ onMounted(refresh)
 .title {
   margin: 4px 0;
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .sub {
   margin: 0;
-  color: #666;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -127,10 +125,10 @@ onMounted(refresh)
 }
 
 .card {
-  border: 1px solid #efefef;
   border-radius: 12px;
   padding: 12px;
-  background: #fafafa;
+  background: var(--bg-alt);
+  box-shadow: none;
 }
 
 .card-head {
@@ -141,12 +139,12 @@ onMounted(refresh)
 }
 
 .pill {
-  background: #fff;
-  border: 1px solid #e3e3e3;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 999px;
   padding: 4px 8px;
   font-size: 12px;
-  color: #444;
+  color: var(--ink-soft);
 }
 
 .list {
@@ -161,42 +159,36 @@ onMounted(refresh)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
-  border: 1px solid #e8e8e8;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px;
 }
 
 .name {
-  font-weight: 800;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .bank {
   font-size: 12px;
-  color: #666;
+  color: var(--muted);
 }
 
 .empty {
   text-align: center;
-  color: #777;
+  color: var(--muted);
   padding: 10px 0;
 }
 
-.btn-line {
-  border-radius: 10px;
-  border: 1px solid #111;
-  background: #fff;
-  color: #111;
-  font-weight: 800;
-  padding: 8px 12px;
-}
 
 .btn-text {
   border: none;
   background: transparent;
   color: #d00000;
   font-weight: 800;
+  height: var(--btn-h-sm);
+  padding: 0 8px;
 }
 
 @media (max-width: 768px) {
