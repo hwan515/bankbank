@@ -1,7 +1,7 @@
 // src/stores/chatbot.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import axios from 'axios'
+import api from './api'
 
 export const useChatbotStore = defineStore('chatbot', () => {
   const messages = ref([
@@ -17,9 +17,7 @@ export const useChatbotStore = defineStore('chatbot', () => {
 
     loading.value = true
     try {
-      // ✅ TODO: 네 백엔드 엔드포인트로 변경
-      // 예: POST /api/chatbot/
-      const res = await axios.post('http://localhost:8000/api/chatbot/', {
+      const res = await api.post('/api/chatbot/', {
         message: userText,
       })
 
