@@ -120,10 +120,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "card_project.wsgi.application"
 
+REDIS_HOST = env("REDIS_HOST", default="127.0.0.1")
+REDIS_PORT = env.int("REDIS_PORT", default=6379)
+
 CHANNEL_LAYERS = {
-    "default" : {
-        "BACKEND" : "channels_redis.core.RedisChannelLayer",
-        "CONFIG" : {"hosts" : [("127.0.0.1", 6379)]},
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [(REDIS_HOST, REDIS_PORT)]},
     }
 }
 
