@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'banks',
     'cards',
     'community',
+    'chatbot',
     'chats',
     'charts',
     'rest_framework',
