@@ -29,9 +29,11 @@ MAX_K = 10
 SYSTEM_PROMPT = (
     "당신은 금융상품/카드 추천을 돕는 챗봇입니다. "
     "사용자가 카드 추천/비교를 요청하면 recommend_cards 도구를 호출하세요. "
+    "사용자가 특정 카드의 연회비/혜택/전월실적 등 정보를 물으면 get_card_details 도구를 호출하세요. "
     "예금 상품은 search_deposit_products, 적금 상품은 search_saving_products 도구를 호출하세요. "
     "사용자가 자신이 가입한 상품, 내 상품, 내 예금/적금 등을 물어보면 get_my_subscriptions 도구를 호출하세요. "
     "도구 결과가 제공되면 해당 데이터만 근거로 답하고, "
+    "카드 조회 결과가 ambiguous이면 후보를 짧게 나열하고 사용자에게 정확한 카드명을 다시 물어보세요. "
     "데이터가 없으면 간단히 알려준 뒤 자세한 조건을 질문하세요. "
     "마크다운/별표 강조 없이 순수 텍스트로 답변하세요. "
     "한국어로 간결하게 답변하세요."
@@ -60,6 +62,20 @@ TOOLS = [
                     },
                 },
                 "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_card_details",
+            "description": "카드명으로 카드 상세 정보를 조회합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "card_name": {"type": "string", "description": "조회할 카드명"},
+                },
+                "required": ["card_name"],
             },
         },
     },
@@ -174,6 +190,8 @@ class GmsChatbotService:
                             message=message,
                             args=args,
                         )
+                    elif name == "get_card_details":
+                        tool_result = self._handle_card_details(args)
                     elif name == "search_deposit_products":
                         tool_result, products_payload["deposits"] = self._handle_deposit_search(args)
                     elif name == "search_saving_products":
@@ -249,6 +267,51 @@ class GmsChatbotService:
         }
 
         return tool_result, cards_payload
+
+    def _handle_card_details(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        card_name = (args.get("card_name") or "").strip()
+        if not card_name:
+            return {"error": "card_name_required"}
+
+        normalized = self._normalize_card_name(card_name)
+        if not normalized:
+            return {"error": "card_name_required"}
+
+        exact_qs = Card.objects.filter(name__iexact=card_name)
+        if not exact_qs.exists():
+            exact_qs = Card.objects.filter(name__iexact=normalized)
+
+        contains_qs = Card.objects.filter(name__icontains=card_name)
+        if not contains_qs.exists():
+            contains_qs = Card.objects.filter(name__icontains=normalized)
+
+        candidates = list(exact_qs[:1]) or list(contains_qs[:5])
+        if not candidates:
+            return {"error": "card_not_found"}
+        if len(candidates) > 1:
+            return {
+                "status": "ambiguous",
+                "candidates": [
+                    {"name": c.name, "company": c.company} for c in candidates
+                ],
+            }
+
+        card = candidates[0]
+        return {
+            "status": "ok",
+            "name": card.name,
+            "company": card.company,
+            "annual_fee": card.annual_fee,
+            "min_spending": card.min_spending,
+            "card_type": card.get_card_type_display(),
+            "benefits_summary": card.benefits_summary,
+        }
+
+    def _normalize_card_name(self, name: str) -> str:
+        text = name.strip().lower()
+        for token in ("카드", "card"):
+            text = text.replace(token, "")
+        return " ".join(text.split())
 
     def _handle_deposit_search(
         self,
