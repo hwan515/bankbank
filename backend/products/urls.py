@@ -25,6 +25,7 @@ urlpatterns = [
     # [F03-3] 가입 여부 확인
     path('check-subscription/<str:product_type>/<int:pk>/', views.check_subscription, name='check_subscription'),
     path('subscriptions/', views.user_subscriptions, name='user_subscriptions'),
+    path('subscriptions/<str:product_type>/<int:pk>/', views.update_subscription, name='update_subscription'),
 
     # 은행 목록 - 추후 지도 개발 때 사용
     path('banks/', views.bank_list, name='bank_list'),

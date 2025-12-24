@@ -5,11 +5,20 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 import requests
-from .models import FinancialCompany, DepositProducts, DepositOptions, SavingProducts, SavingOptions
+from .models import (
+    FinancialCompany,
+    DepositProducts,
+    DepositOptions,
+    SavingProducts,
+    SavingOptions,
+    DepositSubscription,
+    SavingSubscription,
+)
 from .serializers import (
     DepositProductsSerializer, DepositProductsListSerializer,
     SavingProductsSerializer, SavingProductsListSerializer,
     SimpleDepositProductSerializer, SimpleSavingProductSerializer,
+    DepositSubscriptionSerializer, SavingSubscriptionSerializer,
 )
 
 
@@ -219,11 +228,21 @@ def deposit_products(request):
     정기예금 상품 목록 조회 (최적화)
     - 은행(금융회사)별 필터: ?bank=우리은행
     - 상품명 검색: ?search=정기예금
-    - 정렬: ?ordering=intr_rate_12 (6, 12, 24, 36개월 금리 기준)
+    - 기간 필터: ?term_months=12 (6, 12, 24, 36개월)
+    - 정렬: ?ordering=intr_rate_12 (기간 미선택 시 최고 금리 기준 정렬)
     """
-    from django.db.models import Subquery, OuterRef, F
+    from decimal import Decimal
+    from django.db.models import Subquery, OuterRef, F, Value, DecimalField
+    from django.db.models.functions import Coalesce, Greatest
 
     products = DepositProducts.objects.all()
+    term_months = request.query_params.get('term_months')
+    try:
+        term_months = int(term_months)
+    except (TypeError, ValueError):
+        term_months = None
+    if term_months not in [6, 12, 24, 36]:
+        term_months = None
 
     # 기간별 최고 우대금리를 Subquery로 정의
     rate_subqueries = {}
@@ -238,6 +257,9 @@ def deposit_products(request):
 
     products = products.annotate(**rate_subqueries)
 
+    if term_months:
+        products = products.filter(options__save_trm=term_months).distinct()
+
     # 은행(금융회사)별 필터
     bank = request.query_params.get('bank')
     if bank:
@@ -250,8 +272,21 @@ def deposit_products(request):
 
     # 정렬 (금리 기준)
     ordering = request.query_params.get('ordering')
-    if ordering in ['intr_rate_6', 'intr_rate_12', 'intr_rate_24', 'intr_rate_36']:
+    if term_months:
+        products = products.order_by(F(f'intr_rate_{term_months}').desc(nulls_last=True))
+    elif ordering in ['intr_rate_6', 'intr_rate_12', 'intr_rate_24', 'intr_rate_36']:
         products = products.order_by(F(ordering).desc(nulls_last=True))
+    else:
+        null_floor = Value(Decimal('-1.0'), output_field=DecimalField(max_digits=5, decimal_places=2))
+        products = products.annotate(
+            best_rate=Greatest(
+                Coalesce(F('intr_rate_6'), null_floor),
+                Coalesce(F('intr_rate_12'), null_floor),
+                Coalesce(F('intr_rate_24'), null_floor),
+                Coalesce(F('intr_rate_36'), null_floor),
+                output_field=DecimalField(max_digits=5, decimal_places=2),
+            )
+        ).order_by('-best_rate')
 
     serializer = DepositProductsListSerializer(products, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -263,11 +298,23 @@ def saving_products(request):
     적금 상품 목록 조회 (최적화)
     - 은행(금융회사)별 필터: ?bank=우리은행
     - 상품명 검색: ?search=적금
-    - 정렬: ?ordering=intr_rate_12 (6, 12, 24, 36개월 금리 기준)
+    - 기간 필터: ?term_months=12 (6, 12, 24, 36개월)
+    - 적립 방식: ?rsrv_type=정액/자유
+    - 월 납입액: ?monthly_amount=300000 (원)
+    - 정렬: ?ordering=intr_rate_12 (기간 미선택 시 최고 금리 기준 정렬)
     """
-    from django.db.models import Subquery, OuterRef, F
+    from decimal import Decimal
+    from django.db.models import Subquery, OuterRef, F, Value, Q, DecimalField
+    from django.db.models.functions import Coalesce, Greatest
 
     products = SavingProducts.objects.all()
+    term_months = request.query_params.get('term_months')
+    try:
+        term_months = int(term_months)
+    except (TypeError, ValueError):
+        term_months = None
+    if term_months not in [6, 12, 24, 36]:
+        term_months = None
 
     # 기간별 최고 우대금리를 Subquery로 정의
     rate_subqueries = {}
@@ -282,6 +329,24 @@ def saving_products(request):
     
     products = products.annotate(**rate_subqueries)
 
+    if term_months:
+        products = products.filter(saving_options__save_trm=term_months).distinct()
+
+    rsrv_type = request.query_params.get('rsrv_type')
+    if rsrv_type:
+        if '정액' in rsrv_type:
+            products = products.filter(saving_options__rsrv_type_nm__icontains='정액').distinct()
+        elif '자유' in rsrv_type:
+            products = products.filter(saving_options__rsrv_type_nm__icontains='자유').distinct()
+
+    monthly_amount = request.query_params.get('monthly_amount')
+    try:
+        monthly_amount = int(monthly_amount)
+    except (TypeError, ValueError):
+        monthly_amount = None
+    if monthly_amount is not None and monthly_amount > 0:
+        products = products.filter(Q(max_limit__isnull=True) | Q(max_limit__gte=monthly_amount))
+
     # 은행(금융회사)별 필터
     bank = request.query_params.get('bank')
     if bank:
@@ -294,8 +359,21 @@ def saving_products(request):
 
     # 정렬 (금리 기준)
     ordering = request.query_params.get('ordering')
-    if ordering in ['intr_rate_6', 'intr_rate_12', 'intr_rate_24', 'intr_rate_36']:
+    if term_months:
+        products = products.order_by(F(f'intr_rate_{term_months}').desc(nulls_last=True))
+    elif ordering in ['intr_rate_6', 'intr_rate_12', 'intr_rate_24', 'intr_rate_36']:
         products = products.order_by(F(ordering).desc(nulls_last=True))
+    else:
+        null_floor = Value(Decimal('-1.0'), output_field=DecimalField(max_digits=5, decimal_places=2))
+        products = products.annotate(
+            best_rate=Greatest(
+                Coalesce(F('intr_rate_6'), null_floor),
+                Coalesce(F('intr_rate_12'), null_floor),
+                Coalesce(F('intr_rate_24'), null_floor),
+                Coalesce(F('intr_rate_36'), null_floor),
+                output_field=DecimalField(max_digits=5, decimal_places=2),
+            )
+        ).order_by('-best_rate')
 
     serializer = SavingProductsListSerializer(products, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -353,22 +431,45 @@ def financial_companies(request):
 def subscribe_deposit(request, pk):
     """
     [F03-3] 정기예금 가입/해제
-    - 이미 가입된 상품이면 해제, 아니면 가입
+    - term_months(6/12/24/36) 선택 후 가입
     """
     product = get_object_or_404(DepositProducts, pk=pk)
     user = request.user
 
-    if product in user.deposit_products.all():
-        user.deposit_products.remove(product)
+    subscription = DepositSubscription.objects.filter(user=user, product=product).first()
+    legacy_subscribed = product in user.deposit_products.all()
+
+    if subscription or legacy_subscribed:
+        if subscription:
+            subscription.delete()
+        if legacy_subscribed:
+            user.deposit_products.remove(product)
         return Response({
             "message": "상품 가입이 해제되었습니다.",
             "subscribed": False
         }, status=status.HTTP_200_OK)
     else:
-        user.deposit_products.add(product)
+        term_months = request.data.get('term_months')
+        try:
+            term_months = int(term_months)
+        except (TypeError, ValueError):
+            term_months = None
+        if term_months not in [6, 12, 24, 36]:
+            return Response(
+                {"detail": "term_months is required. (6, 12, 24, 36)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        DepositSubscription.objects.create(
+            user=user,
+            product=product,
+            term_months=term_months,
+        )
+        if product not in user.deposit_products.all():
+            user.deposit_products.add(product)
         return Response({
             "message": "상품에 가입되었습니다.",
-            "subscribed": True
+            "subscribed": True,
+            "term_months": term_months,
         }, status=status.HTTP_201_CREATED)
 
 
@@ -377,22 +478,59 @@ def subscribe_deposit(request, pk):
 def subscribe_saving(request, pk):
     """
     [F03-3] 적금 가입/해제
-    - 이미 가입된 상품이면 해제, 아니면 가입
+    - term_months(6/12/24/36) 선택 후 가입
     """
     product = get_object_or_404(SavingProducts, pk=pk)
     user = request.user
 
-    if product in user.saving_products.all():
-        user.saving_products.remove(product)
+    subscription = SavingSubscription.objects.filter(user=user, product=product).first()
+    legacy_subscribed = product in user.saving_products.all()
+
+    if subscription or legacy_subscribed:
+        if subscription:
+            subscription.delete()
+        if legacy_subscribed:
+            user.saving_products.remove(product)
         return Response({
             "message": "상품 가입이 해제되었습니다.",
             "subscribed": False
         }, status=status.HTTP_200_OK)
     else:
-        user.saving_products.add(product)
+        term_months = request.data.get('term_months')
+        try:
+            term_months = int(term_months)
+        except (TypeError, ValueError):
+            term_months = None
+
+        rsrv_type = (request.data.get('rsrv_type') or '').strip()
+        monthly_amount = request.data.get('monthly_amount')
+        try:
+            monthly_amount = int(monthly_amount)
+        except (TypeError, ValueError):
+            monthly_amount = None
+        if monthly_amount is not None and monthly_amount <= 0:
+            monthly_amount = None
+
+        if term_months not in [6, 12, 24, 36]:
+            return Response(
+                {"detail": "term_months is required. (6, 12, 24, 36)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        SavingSubscription.objects.create(
+            user=user,
+            product=product,
+            term_months=term_months,
+            rsrv_type=rsrv_type,
+            monthly_amount=monthly_amount,
+        )
+        if product not in user.saving_products.all():
+            user.saving_products.add(product)
         return Response({
             "message": "상품에 가입되었습니다.",
-            "subscribed": True
+            "subscribed": True,
+            "term_months": term_months,
+            "rsrv_type": rsrv_type,
+            "monthly_amount": monthly_amount,
         }, status=status.HTTP_201_CREATED)
 
 
@@ -407,14 +545,150 @@ def check_subscription(request, product_type, pk):
 
     if product_type == 'deposit':
         product = get_object_or_404(DepositProducts, pk=pk)
+        subscription = DepositSubscription.objects.filter(user=user, product=product).first()
+        if subscription:
+            return Response({
+                "subscribed": True,
+                "term_months": subscription.term_months,
+            }, status=status.HTTP_200_OK)
         subscribed = product in user.deposit_products.all()
+        if subscribed:
+            return Response({
+                "subscribed": True,
+                "term_months": None,
+            }, status=status.HTTP_200_OK)
     elif product_type == 'saving':
         product = get_object_or_404(SavingProducts, pk=pk)
+        subscription = SavingSubscription.objects.filter(user=user, product=product).first()
+        if subscription:
+            return Response({
+                "subscribed": True,
+                "term_months": subscription.term_months,
+                "rsrv_type": subscription.rsrv_type,
+                "monthly_amount": subscription.monthly_amount,
+            }, status=status.HTTP_200_OK)
         subscribed = product in user.saving_products.all()
+        if subscribed:
+            return Response({
+                "subscribed": True,
+                "term_months": None,
+                "rsrv_type": "",
+                "monthly_amount": None,
+            }, status=status.HTTP_200_OK)
     else:
         return Response({"error": "Invalid product type"}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({"subscribed": subscribed}, status=status.HTTP_200_OK)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_subscription(request, product_type, pk):
+    """
+    [F03-3] 구독 기간 변경
+    - term_months 필수
+    """
+    user = request.user
+    term_months = request.data.get('term_months')
+    try:
+        term_months = int(term_months)
+    except (TypeError, ValueError):
+        term_months = None
+    if term_months not in [6, 12, 24, 36]:
+        return Response(
+            {"detail": "term_months is required. (6, 12, 24, 36)"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if product_type == 'deposit':
+        product = get_object_or_404(DepositProducts, pk=pk)
+        if not DepositOptions.objects.filter(product=product, save_trm=term_months).exists():
+            return Response(
+                {"detail": "해당 기간의 예금 옵션이 없습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        subscription = DepositSubscription.objects.filter(user=user, product=product).first()
+        if not subscription:
+            if product not in user.deposit_products.all():
+                return Response({"detail": "구독 정보가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            subscription = DepositSubscription.objects.create(
+                user=user,
+                product=product,
+                term_months=term_months,
+            )
+        else:
+            subscription.term_months = term_months
+            subscription.save(update_fields=['term_months', 'updated_at'])
+
+        if product not in user.deposit_products.all():
+            user.deposit_products.add(product)
+
+        return Response({
+            "subscribed": True,
+            "term_months": subscription.term_months,
+        }, status=status.HTTP_200_OK)
+
+    if product_type == 'saving':
+        product = get_object_or_404(SavingProducts, pk=pk)
+        rsrv_type = (request.data.get('rsrv_type') or '').strip()
+        monthly_amount = request.data.get('monthly_amount')
+        monthly_amount_set = 'monthly_amount' in request.data
+        try:
+            monthly_amount = int(monthly_amount)
+        except (TypeError, ValueError):
+            monthly_amount = None
+        if monthly_amount is not None and monthly_amount <= 0:
+            monthly_amount = None
+
+        rsrv_filter = ''
+        if rsrv_type:
+            if '정액' in rsrv_type:
+                rsrv_filter = '정액'
+            elif '자유' in rsrv_type:
+                rsrv_filter = '자유'
+            else:
+                rsrv_filter = rsrv_type
+
+        option_qs = SavingOptions.objects.filter(product=product, save_trm=term_months)
+        if rsrv_filter:
+            option_qs = option_qs.filter(rsrv_type_nm__icontains=rsrv_filter)
+        if not option_qs.exists():
+            return Response(
+                {"detail": "해당 기간의 적금 옵션이 없습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        subscription = SavingSubscription.objects.filter(user=user, product=product).first()
+        if not subscription:
+            if product not in user.saving_products.all():
+                return Response({"detail": "구독 정보가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            subscription = SavingSubscription.objects.create(
+                user=user,
+                product=product,
+                term_months=term_months,
+                rsrv_type=rsrv_type,
+                monthly_amount=monthly_amount,
+            )
+        else:
+            subscription.term_months = term_months
+            if rsrv_type:
+                subscription.rsrv_type = rsrv_type
+            if monthly_amount_set:
+                subscription.monthly_amount = monthly_amount
+            subscription.save(update_fields=['term_months', 'rsrv_type', 'monthly_amount', 'updated_at'])
+
+        if product not in user.saving_products.all():
+            user.saving_products.add(product)
+
+        return Response({
+            "subscribed": True,
+            "term_months": subscription.term_months,
+            "rsrv_type": subscription.rsrv_type,
+            "monthly_amount": subscription.monthly_amount,
+        }, status=status.HTTP_200_OK)
+
+    return Response({"error": "Invalid product type"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -424,10 +698,26 @@ def user_subscriptions(request):
     사용자가 가입한 예금/적금 목록 조회
     """
     user = request.user
-    deposit_qs = user.deposit_products.all()
-    saving_qs = user.saving_products.all()
+    deposit_subs = DepositSubscription.objects.filter(user=user).select_related('product')
+    saving_subs = SavingSubscription.objects.filter(user=user).select_related('product')
+
+    deposits = DepositSubscriptionSerializer(deposit_subs, many=True).data
+    savings = SavingSubscriptionSerializer(saving_subs, many=True).data
+
+    deposit_ids = {sub.product_id for sub in deposit_subs}
+    saving_ids = {sub.product_id for sub in saving_subs}
+
+    fallback_deposits = user.deposit_products.exclude(id__in=deposit_ids)
+    fallback_savings = user.saving_products.exclude(id__in=saving_ids)
+
+    if fallback_deposits.exists():
+        for item in SimpleDepositProductSerializer(fallback_deposits, many=True).data:
+            deposits.append({**item, "term_months": None})
+    if fallback_savings.exists():
+        for item in SimpleSavingProductSerializer(fallback_savings, many=True).data:
+            savings.append({**item, "term_months": None, "rsrv_type": "", "monthly_amount": None})
 
     return Response({
-        "deposits": SimpleDepositProductSerializer(deposit_qs, many=True).data,
-        "savings": SimpleSavingProductSerializer(saving_qs, many=True).data,
+        "deposits": deposits,
+        "savings": savings,
     }, status=status.HTTP_200_OK)

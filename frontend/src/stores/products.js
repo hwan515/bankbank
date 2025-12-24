@@ -59,7 +59,14 @@ export const useProductsStore = defineStore('products', () => {
 
   // 상품 목록 조회 (캐싱 + TTL)
   async function fetchProducts(productType, filters = {}) {
-    const hasFilters = !!(filters.bank || filters.search || filters.ordering)
+    const hasFilters = !!(
+      filters.bank ||
+      filters.search ||
+      filters.ordering ||
+      filters.term_months ||
+      filters.rsrv_type ||
+      filters.monthly_amount
+    )
 
     // 필터가 없고, 캐시가 유효한 경우 API 호출을 건너뜀
     if (!hasFilters && !isCacheExpired(productType)) {
@@ -86,6 +93,9 @@ export const useProductsStore = defineStore('products', () => {
       if (filters.bank) params.append('bank', filters.bank)
       if (filters.search) params.append('search', filters.search)
       if (filters.ordering) params.append('ordering', filters.ordering)
+      if (filters.term_months) params.append('term_months', filters.term_months)
+      if (filters.rsrv_type) params.append('rsrv_type', filters.rsrv_type)
+      if (filters.monthly_amount) params.append('monthly_amount', filters.monthly_amount)
 
       const response = await api.get(`${endpoint}?${params.toString()}`)
 
@@ -144,18 +154,18 @@ export const useProductsStore = defineStore('products', () => {
         `/products/check-subscription/${productType}/${productId}/`
       )
       isSubscribed.value = response.data.subscribed
-      return response.data.subscribed
+      return response.data
     } catch (err) {
       if (err.status !== 401) {
         error.value = err.message
       }
       isSubscribed.value = false
-      return false
+      return { subscribed: false }
     }
   }
 
   // 가입/해제 토글
-  async function toggleSubscription(productType, productId) {
+  async function toggleSubscription(productType, productId, payload = {}) {
     subscribing.value = true
 
     try {
@@ -164,7 +174,7 @@ export const useProductsStore = defineStore('products', () => {
           ? `/products/deposit-products/${productId}/subscribe/`
           : `/products/saving-products/${productId}/subscribe/`
 
-      const response = await api.post(endpoint)
+      const response = await api.post(endpoint, payload)
       isSubscribed.value = response.data.subscribed
 
       // 가입 해제 시 가입 목록에서 제거
@@ -189,6 +199,21 @@ export const useProductsStore = defineStore('products', () => {
       }
     } finally {
       subscribing.value = false
+    }
+  }
+
+  async function updateSubscription(productType, productId, payload = {}) {
+    try {
+      const response = await api.patch(
+        `/products/subscriptions/${productType}/${productId}/`,
+        payload
+      )
+      return { success: true, data: response.data }
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.detail || err.message
+      }
     }
   }
 
@@ -241,6 +266,7 @@ export const useProductsStore = defineStore('products', () => {
     fetchProductDetail,
     checkSubscription,
     toggleSubscription,
+    updateSubscription,
     clearCurrentProduct,
     clearError,
     fetchSubscriptions

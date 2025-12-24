@@ -53,16 +53,69 @@
                   </div>
                 </div>
 
+                <div class="field mt2">
+                  <label class="label">가입 기간</label>
+                  <select v-model="selectedTerm" class="select">
+                    <option value="">선택</option>
+                    <option v-for="term in availableTerms" :key="term" :value="String(term)">
+                      {{ term }}개월
+                    </option>
+                  </select>
+                </div>
+
+                <div class="field mt2">
+                  <label class="label">적립 방식</label>
+                  <select v-model="selectedSavingType" class="select">
+                    <option value="">선택</option>
+                    <option v-for="type in availableSavingTypes" :key="type" :value="type">
+                      {{ type }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="field mt2">
+                  <label class="label">월 납입액(원)</label>
+                  <input
+                    v-model.number="monthlyAmount"
+                    type="number"
+                    class="input"
+                    min="0"
+                    placeholder="예: 300000"
+                  />
+                </div>
+
+                <div v-if="estimatedTotal != null" class="estimate mt2">
+                  <div class="estimate-row">
+                    <span class="ek">예상 이자</span>
+                    <span class="ev">{{ estimatedInterest.toLocaleString() }}원</span>
+                  </div>
+                  <div class="estimate-row">
+                    <span class="ek">예상 만기수령액</span>
+                    <span class="ev strong">{{ estimatedTotal.toLocaleString() }}원</span>
+                  </div>
+                  <div class="estimate-note">* 단순 계산(세전) 기준입니다.</div>
+                </div>
+
                 <div class="cta">
-                  <button
-                    v-if="isAuthenticated"
-                    class="ui-btn w100"
-                    :class="subscribed ? 'ui-btn-danger' : 'ui-btn-primary'"
-                    @click="toggleSubscription"
-                    :disabled="subscribing"
-                  >
-                    {{ subscribing ? '처리중...' : (subscribed ? '가입 해제하기' : '가입하기') }}
-                  </button>
+                  <template v-if="isAuthenticated">
+                    <button
+                      class="ui-btn w100"
+                      :class="subscribed ? 'ui-btn-danger' : 'ui-btn-primary'"
+                      @click="toggleSubscription"
+                      :disabled="subscribing || (!subscribed && !selectedTerm)"
+                    >
+                      {{ subscribing ? '처리중...' : (subscribed ? '가입 해제하기' : '가입하기') }}
+                    </button>
+
+                    <button
+                      v-if="subscribed"
+                      class="ui-btn ui-btn-ghost w100 mt2"
+                      @click="updateSubscriptionTerm"
+                      :disabled="subscribing || !canUpdateTerm"
+                    >
+                      기간 변경
+                    </button>
+                  </template>
 
                   <p v-else class="muted">
                     상품에 가입하려면
@@ -157,6 +210,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useProductDetail } from '@/composables/useProductDetail'
 
 const {
@@ -165,9 +219,62 @@ const {
   subscribed,
   subscribing,
   isAuthenticated,
+  selectedTerm,
+  selectedSavingType,
+  monthlyAmount,
+  availableTerms,
+  availableSavingTypes,
+  canUpdateTerm,
   getJoinDenyText,
-  toggleSubscription
+  toggleSubscription,
+  updateSubscriptionTerm
 } = useProductDetail('saving')
+
+const rateForEstimate = computed(() => {
+  const productData = product.value
+  const term = Number(selectedTerm.value)
+  if (!productData || !Number.isFinite(term)) return null
+
+  let options = productData.saving_options || []
+  if (selectedSavingType.value) {
+    options = options.filter((option) => option.rsrv_type_nm === selectedSavingType.value)
+  }
+  options = options.filter((option) => Number(option.save_trm) === term)
+  if (!options.length) return null
+
+  let bestRate = null
+  options.forEach((option) => {
+    const rawRate = option.intr_rate2 != null ? option.intr_rate2 : option.intr_rate
+    const rate = Number(rawRate)
+    if (Number.isFinite(rate)) {
+      if (bestRate == null || rate > bestRate) {
+        bestRate = rate
+      }
+    }
+  })
+  return bestRate
+})
+
+const estimatedInterest = computed(() => {
+  const amount = Number(monthlyAmount.value)
+  const term = Number(selectedTerm.value)
+  const rate = Number(rateForEstimate.value)
+  if (!Number.isFinite(amount) || amount <= 0) return null
+  if (!Number.isFinite(term) || term <= 0) return null
+  if (!Number.isFinite(rate) || rate <= 0) return null
+
+  const monthlyRate = rate / 100 / 12
+  const interest = amount * (term * (term + 1) / 2) * monthlyRate
+  return Math.round(interest)
+})
+
+const estimatedTotal = computed(() => {
+  if (estimatedInterest.value == null) return null
+  const amount = Number(monthlyAmount.value)
+  const term = Number(selectedTerm.value)
+  if (!Number.isFinite(amount) || !Number.isFinite(term)) return null
+  return Math.round(amount * term + estimatedInterest.value)
+})
 </script>
 
 <style scoped>
@@ -220,6 +327,33 @@ const {
 .mb { margin-bottom: 14px; }
 .mt { margin-top: 12px; }
 .mt2 { margin-top: 10px; }
+.field { display: grid; gap: 6px; }
+.label { font-size: 12px; font-weight: 700; color: var(--ink); }
+.select, .input {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0 10px;
+  font-size: 14px;
+}
+.estimate {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+.estimate-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.estimate-note {
+  font-size: 11px;
+  color: var(--muted);
+}
 
 /* Key-Value */
 .kv-row {

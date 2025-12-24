@@ -47,16 +47,36 @@
                   </div>
                 </div>
 
+                <div class="field mt2">
+                  <label class="label">가입 기간</label>
+                  <select v-model="selectedTerm" class="select">
+                    <option value="">선택</option>
+                    <option v-for="term in availableTerms" :key="term" :value="String(term)">
+                      {{ term }}개월
+                    </option>
+                  </select>
+                </div>
+
                 <div class="cta">
-                  <button
-                    v-if="isAuthenticated"
-                    class="ui-btn w100"
-                    :class="subscribed ? 'ui-btn-danger' : 'ui-btn-primary'"
-                    @click="toggleSubscription"
-                    :disabled="subscribing"
-                  >
-                    {{ subscribing ? '처리중...' : (subscribed ? '가입 해제하기' : '가입하기') }}
-                  </button>
+                  <template v-if="isAuthenticated">
+                    <button
+                      class="ui-btn w100"
+                      :class="subscribed ? 'ui-btn-danger' : 'ui-btn-primary'"
+                      @click="toggleSubscription"
+                      :disabled="subscribing || (!subscribed && !selectedTerm)"
+                    >
+                      {{ subscribing ? '처리중...' : (subscribed ? '가입 해제하기' : '가입하기') }}
+                    </button>
+
+                    <button
+                      v-if="subscribed"
+                      class="ui-btn ui-btn-ghost w100 mt2"
+                      @click="updateSubscriptionTerm"
+                      :disabled="subscribing || !canUpdateTerm"
+                    >
+                      기간 변경
+                    </button>
+                  </template>
 
                   <p v-else class="muted">
                     상품에 가입하려면
@@ -157,8 +177,12 @@ const {
   subscribed,
   subscribing,
   isAuthenticated,
+  selectedTerm,
+  availableTerms,
+  canUpdateTerm,
   getJoinDenyText,
-  toggleSubscription
+  toggleSubscription,
+  updateSubscriptionTerm
 } = useProductDetail('deposit')
 </script>
 
@@ -218,6 +242,16 @@ const {
 .mb { margin-bottom: 14px; }
 .mt { margin-top: 12px; }
 .mt2 { margin-top: 10px; }
+.field { display: grid; gap: 6px; }
+.label { font-size: 12px; font-weight: 700; color: var(--ink); }
+.select {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0 10px;
+  font-size: 14px;
+}
 
 /* Key-Value */
 .kv-row {
