@@ -1,66 +1,54 @@
-// src/stores/realtimeChat.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const useRealtimeChatStore = defineStore('realtimeChat', () => {
   const socket = ref(null)
   const connected = ref(false)
-  const messages = ref([
-    { id: 1, sender: 'system', text: '채팅방에 연결하면 메시지가 여기에 표시됩니다.' },
-  ])
+  const messages = ref([])
+  const currentRoomId = ref(null)
 
   const connect = (roomId) => {
+    if (!roomId) throw new Error('roomId required')
+
+    // 방 바뀌면 재연결
+    if (socket.value && currentRoomId.value !== roomId) {
+      socket.value.close()
+      socket.value = null
+      connected.value = false
+    }
     if (socket.value) return
-    // ✅ 배포 시 wss:// 로 바꾸기
-    const wsUrl = `ws://localhost:8000/ws/chat/${roomId}/`
+
+    currentRoomId.value = roomId
+    const token = localStorage.getItem('token')
+    const wsUrl = `ws://localhost:8000/ws/chat/${roomId}/?token=${token}`
+
     socket.value = new WebSocket(wsUrl)
 
-    socket.value.onopen = () => {
-      connected.value = true
-      messages.value.push({ id: Date.now(), sender: 'system', text: '연결됨 ✅' })
-    }
-
-    socket.value.onclose = () => {
-      connected.value = false
-      socket.value = null
-      messages.value.push({ id: Date.now(), sender: 'system', text: '연결 종료됨' })
-    }
-
-    socket.value.onerror = () => {
-      connected.value = false
-      messages.value.push({ id: Date.now(), sender: 'system', text: '연결 오류 발생' })
-    }
-
+    socket.value.onopen = () => { connected.value = true }
+    socket.value.onclose = () => { connected.value = false; socket.value = null }
     socket.value.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data)
-        messages.value.push({
-          id: Date.now(),
-          sender: data.sender ?? 'unknown',
-          text: data.message ?? '',
-        })
-      } catch {
-        // 혹시 문자열로 올 경우
-        messages.value.push({ id: Date.now(), sender: 'server', text: String(e.data) })
-      }
+      const data = JSON.parse(e.data)
+      messages.value.push({
+        id: data.id ?? Date.now(),
+        sender: data.sender,
+        text: data.message,
+        created_at: data.created_at,
+      })
     }
   }
 
-  const send = (sender, text) => {
-    const msg = text?.trim()
+  const disconnect = () => socket.value?.close()
+
+  const setInitial = (history) => {
+    messages.value = [...(history || [])]
+  }
+
+  const send = (text) => {
+    const msg = (text || '').trim()
     if (!msg) return
     if (!socket.value || socket.value.readyState !== WebSocket.OPEN) return
-
-    socket.value.send(JSON.stringify({ sender, message: msg }))
+    socket.value.send(JSON.stringify({ message: msg }))
   }
 
-  const disconnect = () => {
-    socket.value?.close()
-  }
-
-  const reset = () => {
-    messages.value = [{ id: 1, sender: 'system', text: '채팅을 초기화했어요.' }]
-  }
-
-  return { connected, messages, connect, send, disconnect, reset }
+  return { connected, messages, currentRoomId, connect, disconnect, setInitial, send }
 })

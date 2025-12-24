@@ -22,7 +22,7 @@ export const useAccountStore = defineStore('account', () => {
 
             )
             token.value = res.data.key
-            print(token.value)
+            
             // axios 전역 헤더 설정. 
             localStorage.setItem("token", token.value)
             axios.defaults.headers.common['Authorization'] = `Token ${token.value}`
