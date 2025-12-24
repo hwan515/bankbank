@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import time
@@ -6,6 +7,8 @@ from typing import Any, Dict, List, Optional, Set
 from pathlib import Path
 
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 from django.db.models import Q, F
 from django.db.models.functions import Coalesce
 from dotenv import load_dotenv
@@ -140,7 +143,7 @@ class CardRecommendService:
         try:
             results = self.store.similarity_search_with_score(query, k=self.chroma_top_n)
         except Exception as e:
-            print(f"[CardRecommendService] Chroma 검색 오류: {e}")
+            logger.error(f"Chroma 검색 오류: {e}", exc_info=True)
             return {}
 
         candidates = {}

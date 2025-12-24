@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -9,11 +10,19 @@ from openai import OpenAI
 from cards.models import Card, UserProfile
 from cards.serializers import CardListSerializer
 from cards.services.recommend import CardRecommendService
-from products.models import DepositOptions, DepositProducts, SavingOptions, SavingProducts
+from products.models import (
+    DepositOptions,
+    DepositProducts,
+    DepositSubscription,
+    SavingOptions,
+    SavingProducts,
+    SavingSubscription,
+)
 from products.serializers import DepositProductsListSerializer, SavingProductsListSerializer
 
+logger = logging.getLogger(__name__)
 
-GMS_BASE_URL = "https://gms.ssafy.io/gmsapi/api.openai.com/v1"
+GMS_BASE_URL = os.getenv("GMS_BASE_URL", "https://gms.ssafy.io/gmsapi/api.openai.com/v1")
 DEFAULT_K = 5
 MAX_K = 10
 
@@ -21,6 +30,7 @@ SYSTEM_PROMPT = (
     "당신은 금융상품/카드 추천을 돕는 챗봇입니다. "
     "사용자가 카드 추천/비교를 요청하면 recommend_cards 도구를 호출하세요. "
     "예금 상품은 search_deposit_products, 적금 상품은 search_saving_products 도구를 호출하세요. "
+    "사용자가 자신이 가입한 상품, 내 상품, 내 예금/적금 등을 물어보면 get_my_subscriptions 도구를 호출하세요. "
     "도구 결과가 제공되면 해당 데이터만 근거로 답하고, "
     "데이터가 없으면 간단히 알려준 뒤 자세한 조건을 질문하세요. "
     "마크다운/별표 강조 없이 순수 텍스트로 답변하세요. "
@@ -85,6 +95,23 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_my_subscriptions",
+            "description": "현재 로그인한 사용자가 가입한 예금/적금 상품 목록을 조회합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "product_type": {
+                        "type": "string",
+                        "description": "조회할 상품 유형: deposit(예금), saving(적금), all(전체). 기본값은 all",
+                        "enum": ["deposit", "saving", "all"],
+                    },
+                },
+            },
+        },
+    },
 ]
 
 
@@ -100,6 +127,8 @@ class GmsChatbotService:
         products_payload: Dict[str, List[Dict[str, Any]]] = {
             "deposits": [],
             "savings": [],
+            "my_deposits": [],
+            "my_savings": [],
         }
 
         if not self.api_key:
@@ -122,7 +151,8 @@ class GmsChatbotService:
                 tool_choice="auto",
                 temperature=0.3,
             )
-        except Exception:
+        except Exception as e:
+            logger.error(f"OpenAI API 호출 실패: {e}", exc_info=True)
             return {
                 "reply": "지금은 챗봇 응답을 생성할 수 없어요. 잠시 후 다시 시도해 주세요.",
                 "cards": cards_payload,
@@ -148,9 +178,14 @@ class GmsChatbotService:
                         tool_result, products_payload["deposits"] = self._handle_deposit_search(args)
                     elif name == "search_saving_products":
                         tool_result, products_payload["savings"] = self._handle_saving_search(args)
+                    elif name == "get_my_subscriptions":
+                        tool_result, subscriptions = self._handle_my_subscriptions(user, args)
+                        products_payload["my_deposits"] = subscriptions.get("deposits", [])
+                        products_payload["my_savings"] = subscriptions.get("savings", [])
                     else:
                         tool_result = {"error": f"unknown_tool:{name}"}
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Tool 실행 실패 ({name}): {e}", exc_info=True)
                     tool_result = {"error": f"tool_failed:{name}"}
 
                 messages.append(
@@ -168,7 +203,8 @@ class GmsChatbotService:
                     temperature=0.3,
                 )
                 reply = (final.choices[0].message.content or "").strip()
-            except Exception:
+            except Exception as e:
+                logger.warning(f"최종 응답 생성 실패: {e}", exc_info=True)
                 reply = ""
         else:
             reply = (assistant_message.content or "").strip()
@@ -245,6 +281,97 @@ class GmsChatbotService:
             "products": self._summarize_products(products, term_months),
         }
         return tool_result, products
+
+    def _handle_my_subscriptions(
+        self,
+        user,
+        args: Dict[str, Any],
+    ) -> Tuple[Dict[str, Any], Dict[str, List[Dict[str, Any]]]]:
+        if not getattr(user, "is_authenticated", False):
+            return {"error": "로그인이 필요합니다."}, {"deposits": [], "savings": []}
+
+        product_type = (args.get("product_type") or "all").strip().lower()
+
+        deposits: List[Dict[str, Any]] = []
+        savings: List[Dict[str, Any]] = []
+
+        if product_type in ("deposit", "all"):
+            deposit_subs = DepositSubscription.objects.filter(user=user).select_related("product")
+            for sub in deposit_subs:
+                product = sub.product
+                rate = self._get_deposit_rate(product, sub.term_months)
+                deposits.append({
+                    "id": product.id,
+                    "fin_prdt_cd": product.fin_prdt_cd,
+                    "fin_prdt_nm": product.fin_prdt_nm,
+                    "kor_co_nm": product.kor_co_nm,
+                    "term_months": sub.term_months,
+                    "rate": rate,
+                    "subscribed_at": sub.created_at.isoformat() if sub.created_at else None,
+                })
+
+        if product_type in ("saving", "all"):
+            saving_subs = SavingSubscription.objects.filter(user=user).select_related("product")
+            for sub in saving_subs:
+                product = sub.product
+                rate = self._get_saving_rate(product, sub.term_months)
+                savings.append({
+                    "id": product.id,
+                    "fin_prdt_cd": product.fin_prdt_cd,
+                    "fin_prdt_nm": product.fin_prdt_nm,
+                    "kor_co_nm": product.kor_co_nm,
+                    "term_months": sub.term_months,
+                    "rsrv_type": sub.rsrv_type,
+                    "monthly_amount": sub.monthly_amount,
+                    "rate": rate,
+                    "subscribed_at": sub.created_at.isoformat() if sub.created_at else None,
+                })
+
+        tool_result = {
+            "deposit_count": len(deposits),
+            "saving_count": len(savings),
+            "deposits": [
+                {
+                    "name": d["fin_prdt_nm"],
+                    "bank": d["kor_co_nm"],
+                    "term_months": d["term_months"],
+                    "rate": d["rate"],
+                }
+                for d in deposits
+            ],
+            "savings": [
+                {
+                    "name": s["fin_prdt_nm"],
+                    "bank": s["kor_co_nm"],
+                    "term_months": s["term_months"],
+                    "rate": s["rate"],
+                    "monthly_amount": s["monthly_amount"],
+                }
+                for s in savings
+            ],
+        }
+
+        return tool_result, {"deposits": deposits, "savings": savings}
+
+    def _get_deposit_rate(self, product, term_months: Optional[int]):
+        if term_months is None:
+            term_months = 12
+        option = DepositOptions.objects.filter(
+            product=product, save_trm=term_months
+        ).order_by("-intr_rate2").first()
+        if option:
+            return float(option.intr_rate2) if option.intr_rate2 else None
+        return None
+
+    def _get_saving_rate(self, product, term_months: Optional[int]):
+        if term_months is None:
+            term_months = 12
+        option = SavingOptions.objects.filter(
+            product=product, save_trm=term_months
+        ).order_by("-intr_rate2").first()
+        if option:
+            return float(option.intr_rate2) if option.intr_rate2 else None
+        return None
 
     def _parse_tool_args(self, raw: str) -> Dict[str, Any]:
         raw = raw.strip()

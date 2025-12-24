@@ -161,17 +161,19 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useProductsStore } from '@/stores/products'
 import { storeToRefs } from 'pinia'
 
 const router = useRouter()
+const route = useRoute()
 const productsStore = useProductsStore()
 
 const { loading, banks, depositProducts, savingProducts } = storeToRefs(productsStore)
 
-// 로컬 UI 상태
-const activeTab = ref('deposit')
+// 로컬 UI 상태 - 쿼리 파라미터에서 초기값 설정
+const initialTab = route.query.tab === 'saving' ? 'saving' : 'deposit'
+const activeTab = ref(initialTab)
 const selectedBank = ref('')
 const searchKeyword = ref('')
 const selectedTerm = ref('')

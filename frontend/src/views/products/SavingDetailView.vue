@@ -125,7 +125,7 @@
               </div>
             </div>
 
-            <router-link to="/products" class="ui-btn ui-btn-ghost mt">
+            <router-link to="/products?tab=saving" class="ui-btn ui-btn-ghost mt">
               ← 목록으로 돌아가기
             </router-link>
           </div>
@@ -202,7 +202,7 @@
       <!-- 실패 -->
       <div v-else class="state">
         <div class="alert alert-danger">상품 정보를 불러올 수 없습니다.</div>
-        <router-link to="/products" class="ui-btn ui-btn-ghost mt">← 목록으로 돌아가기</router-link>
+        <router-link to="/products?tab=saving" class="ui-btn ui-btn-ghost mt">← 목록으로 돌아가기</router-link>
       </div>
 
     </div>

@@ -34,12 +34,12 @@ FIN_API_KEY = env('FIN_API_KEY')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-km**$a=-(h9$9x$sh4zh3092sy8$oyfccn$url!_*2tmudnqxa"
+SECRET_KEY = env('DJANGO_SECRET_KEY', default='django-insecure-dev-only-key-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
 from dotenv import load_dotenv
 import os
@@ -131,29 +131,29 @@ CHANNEL_LAYERS = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-
 # DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql', 
-#         'NAME': env('MYSQL_DB'),              
-#         'USER': env('MYSQL_USER'),            
-#         'PASSWORD': env('MYSQL_PASSWORD'),    
-#         'HOST': env('MYSQL_HOST'),            
-#         'PORT': env('MYSQL_PORT'),            
-#         'OPTIONS': {
-#             # 문자셋 설정 (한글 깨짐 방지)
-#             'charset': 'utf8mb4',
-#             # 타임아웃 등 추가 옵션 가능
-#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-#         },
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': env('MYSQL_DB'),              
+        'USER': env('MYSQL_USER'),            
+        'PASSWORD': env('MYSQL_PASSWORD'),    
+        'HOST': env('MYSQL_HOST'),            
+        'PORT': env('MYSQL_PORT'),            
+        'OPTIONS': {
+            # 문자셋 설정 (한글 깨짐 방지)
+            'charset': 'utf8mb4',
+            # 타임아웃 등 추가 옵션 가능
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        },
+    }
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

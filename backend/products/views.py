@@ -25,13 +25,14 @@ from .serializers import (
 API_KEY = settings.FIN_API_KEY
 
 # Create your views here.
-@api_view(['GET'])
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
 def save_financial_companies(request):
     """
-    금융회사 데이터 저장
+    금융회사 데이터 저장 (관리자 전용)
     - 권역코드: 020000(은행)
     """
-    company_url = f'http://finlife.fss.or.kr/finlifeapi/companySearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1'
+    company_url = f'https://finlife.fss.or.kr/finlifeapi/companySearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1'
 
     try:
         response = requests.get(company_url)
@@ -69,13 +70,14 @@ def save_financial_companies(request):
         "companies": {"created": created_count, "updated": updated_count}
     }, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
 def save_deposit_products(request):
     """
-    정기예금 데이터 저장
+    정기예금 데이터 저장 (관리자 전용)
     """
 
-    deposit_url = f'http://finlife.fss.or.kr/finlifeapi/depositProductsSearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1'
+    deposit_url = f'https://finlife.fss.or.kr/finlifeapi/depositProductsSearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1'
 
     try:
         response = requests.get(deposit_url)
@@ -145,13 +147,14 @@ def save_deposit_products(request):
     }, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
 def save_saving_products(request):
     """
-    적금 데이터 저장
+    적금 데이터 저장 (관리자 전용)
     """
-    
-    saving_url = f'http://finlife.fss.or.kr/finlifeapi/savingProductsSearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1'
+
+    saving_url = f'https://finlife.fss.or.kr/finlifeapi/savingProductsSearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1'
 
     try:
         response = requests.get(saving_url)

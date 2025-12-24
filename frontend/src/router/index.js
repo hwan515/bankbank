@@ -1,21 +1,19 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-
-// views
 import MainView from '@/views/MainView.vue'
 import LoginView from '@/views/accounts/LoginView.vue'
 import RegisterView from '@/views/accounts/RegisterView.vue'
 import StockMainView from '@/views/stock/stockMainView.vue'
 import VideoDetailView from '@/views/stock/VideoDetailView.vue'
-import ProductsListView from '../views/products/ProductsListView.vue'
-import DepositDetailView from '../views/products/DepositDetailView.vue'
-import SavingDetailView from '../views/products/SavingDetailView.vue'
-import CardView from '../views/cards/CardView.vue'
-import CardDetailView from '../views/cards/CardDetailView.vue'
+import ProductsListView from '@/views/products/ProductsListView.vue'
+import DepositDetailView from '@/views/products/DepositDetailView.vue'
+import SavingDetailView from '@/views/products/SavingDetailView.vue'
+import CardView from '@/views/cards/CardView.vue'
+import CardDetailView from '@/views/cards/CardDetailView.vue'
 import RoadMap from '@/views/banks/RoadMap.vue'
 import PlaceholderView from '@/views/PlaceholderView.vue'
 import MyPageView from '@/views/accounts/MyPageView.vue'
-import ChartsView from '@/views/charts/chartsView.vue'
+import ChartsView from '@/views/charts/ChartsView.vue'
 
 // store (가드에서 사용)
 import { useAccountStore } from '@/stores/account'
@@ -110,7 +108,6 @@ const routes = [
   // (선택) 없는 경로 처리
   // { path: '/:pathMatch(.*)*', redirect: { name: 'main' } },
 ]
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
