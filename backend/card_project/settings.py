@@ -49,6 +49,11 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 DATA_GO_KR_KEY = os.getenv("DATA_GO_KR_KEY")
 # Application definition
 
+METAL_PRICE_FILES = {
+    "gold": BASE_DIR / "data" / "Gold_prices.xlsx",
+    "silver": BASE_DIR / "data" / "Silver_prices.xlsx",
+}
+
 INSTALLED_APPS = [
     'stocks',
     'accounts',
@@ -57,6 +62,8 @@ INSTALLED_APPS = [
     'cards',
     'community',
     'chatbot',
+    'chats',
+    'charts',
     'rest_framework',
     'rest_framework.authtoken',
     'dj_rest_auth',
@@ -72,6 +79,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
+
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -111,34 +120,40 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "card_project.wsgi.application"
 
+CHANNEL_LAYERS = {
+    "default" : {
+        "BACKEND" : "channels_redis.core.RedisChannelLayer",
+        "CONFIG" : {"hosts" : [("127.0.0.1", 6379)]},
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql', 
-        'NAME': env('MYSQL_DB'),              
-        'USER': env('MYSQL_USER'),            
-        'PASSWORD': env('MYSQL_PASSWORD'),    
-        'HOST': env('MYSQL_HOST'),            
-        'PORT': env('MYSQL_PORT'),            
-        'OPTIONS': {
-            # 문자셋 설정 (한글 깨짐 방지)
-            'charset': 'utf8mb4',
-            # 타임아웃 등 추가 옵션 가능
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-        },
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql', 
+#         'NAME': env('MYSQL_DB'),              
+#         'USER': env('MYSQL_USER'),            
+#         'PASSWORD': env('MYSQL_PASSWORD'),    
+#         'HOST': env('MYSQL_HOST'),            
+#         'PORT': env('MYSQL_PORT'),            
+#         'OPTIONS': {
+#             # 문자셋 설정 (한글 깨짐 방지)
+#             'charset': 'utf8mb4',
+#             # 타임아웃 등 추가 옵션 가능
+#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+#         },
+#     }
+# }
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

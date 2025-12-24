@@ -6,49 +6,54 @@
         <button type="button" class="btn-close" aria-label="Close" @click="emit('close')"></button>
       </div>
 
-      <div class="modal-body p-4 pt-0">
-        <form @submit.prevent="submit">
-          <div class="form-floating mb-3">
+        <button type="button" class="icon-btn" aria-label="Close" @click="emit('close')">✕</button>
+      </header>
+
+      <div class="modal-body">
+        <form @submit.prevent="submit" class="form">
+          <div class="field">
+            <label class="label" for="floatingUsername">닉네임</label>
             <input
               v-model.trim="form.username"
               type="text"
-              class="form-control rounded-3"
+              class="input"
               id="floatingUsername"
               placeholder="username"
-              disabled="true"
+              disabled
             />
-            <label for="floatingUsername">닉네임</label>
+            <div class="help">닉네임은 변경할 수 없어요.</div>
           </div>
 
-          <div class="form-floating mb-3">
+          <div class="field">
+            <label class="label" for="floatingEmail">이메일</label>
             <input
               v-model.trim="form.email"
               type="email"
-              class="form-control rounded-3"
+              class="input"
               id="floatingEmail"
               placeholder="name@example.com"
             />
-            <label for="floatingEmail">이메일</label>
           </div>
 
-          <div class="form-floating mb-3">
+          <div class="field">
+            <label class="label" for="floatingGreeting">인사말</label>
             <textarea
               v-model.trim="form.greeting"
-              class="form-control rounded-3"
+              class="textarea"
               id="floatingGreeting"
-              placeholder="인사말"
-              style="height: 110px"
+              placeholder="간단한 한 줄 소개를 적어주세요."
+              rows="4"
             />
-            <label for="floatingGreeting">인사말</label>
           </div>
 
-          <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" type="submit" :disabled="saving">
-            {{ saving ? '저장 중...' : '저장' }}
-          </button>
-
-          <button class="w-100 btn btn-lg rounded-3 btn-outline-secondary" type="button" @click="emit('close')">
-            취소
-          </button>
+          <div class="actions">
+            <button class="btn solid" type="submit" :disabled="saving">
+              {{ saving ? '저장 중...' : '저장' }}
+            </button>
+            <button class="btn ghost" type="button" @click="emit('close')">
+              취소
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -91,7 +96,7 @@ const submit = () => {
   })
 }
 
-// ESC로 닫기 (모달만 영향)
+// ESC로 닫기
 const onKeydown = (e) => {
   if (e.key === 'Escape') emit('close')
 }
@@ -100,7 +105,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <style scoped>
-/* ✅ 프로필 레이아웃 건드리지 않게 모달만 fixed + 높은 z-index */
+/* overlay */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -111,7 +116,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   padding: 24px;
 }
 
-.modal-content {
+/* panel */
+.modal-panel {
   width: min(520px, 100%);
   background: var(--surface);
   border: 1px solid var(--border);
