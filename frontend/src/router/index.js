@@ -11,7 +11,9 @@ import SavingDetailView from '@/views/products/SavingDetailView.vue'
 import CardView from '@/views/cards/CardView.vue'
 import CardDetailView from '@/views/cards/CardDetailView.vue'
 import RoadMap from '@/views/banks/RoadMap.vue'
-import PlaceholderView from '@/views/PlaceholderView.vue'
+import CommunityListView from '@/views/community/CommunityListView.vue'
+import CommunityDetailView from '@/views/community/CommunityDetailView.vue'
+import PostFormView from '@/views/community/PostFormView.vue'
 import MyPageView from '@/views/accounts/MyPageView.vue'
 import ChartsView from '@/views/charts/ChartsView.vue'
 
@@ -82,8 +84,25 @@ const routes = [
   {
     path: '/community',
     name: 'community',
-    component: PlaceholderView,
-    props: { title: '커뮤니티' },
+    component: CommunityListView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/community/new',
+    name: 'community-new',
+    component: PostFormView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/community/:id',
+    name: 'community-detail',
+    component: CommunityDetailView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/community/:id/edit',
+    name: 'community-edit',
+    component: PostFormView,
     meta: { requiresAuth: true },
   },
   {
