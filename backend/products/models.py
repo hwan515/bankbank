@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -67,3 +68,49 @@ class SavingOptions(models.Model):
 
     def __str__(self):
         return f"{self.product.fin_prdt_nm} - {self.save_trm}개월"
+
+
+class DepositSubscription(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="deposit_subscriptions",
+    )
+    product = models.ForeignKey(
+        DepositProducts,
+        on_delete=models.CASCADE,
+        related_name="deposit_subscriptions",
+    )
+    term_months = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("user", "product")
+
+    def __str__(self):
+        return f"{self.user_id}:{self.product_id} ({self.term_months}개월)"
+
+
+class SavingSubscription(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saving_subscriptions",
+    )
+    product = models.ForeignKey(
+        SavingProducts,
+        on_delete=models.CASCADE,
+        related_name="saving_subscriptions",
+    )
+    term_months = models.IntegerField(null=True, blank=True)
+    rsrv_type = models.CharField(max_length=20, blank=True, default="")
+    monthly_amount = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("user", "product")
+
+    def __str__(self):
+        return f"{self.user_id}:{self.product_id} ({self.term_months}개월)"

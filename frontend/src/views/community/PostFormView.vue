@@ -3,7 +3,7 @@
     <header class="head">
       <div>
         <p class="eyebrow">커뮤니티</p>
-        <h1 class="title">{{ isEdit ? '게시글 수정' : '새 글 작성' }}</h1>
+        <h1 class="title serif-title">{{ isEdit ? '게시글 수정' : '새 글 작성' }}</h1>
         <p class="sub">금융상품/카드 사용 경험을 공유해 주세요.</p>
       </div>
       <button class="link" @click="goBack">← 목록으로</button>
@@ -14,7 +14,7 @@
       <RouterLink :to="{ name: 'login' }" class="link ms-1">로그인</RouterLink>
     </div>
 
-    <form v-else class="card" @submit.prevent="handleSubmit">
+    <form v-else class="card ui-card" @submit.prevent="handleSubmit">
       <div class="field">
         <label>게시판</label>
         <select v-model="boardType">
@@ -43,11 +43,11 @@
         />
       </div>
 
-      <p v-if="errorMsg" class="text-danger">{{ errorMsg }}</p>
+      <p v-if="errorMsg" class="ui-text-danger">{{ errorMsg }}</p>
 
       <div class="actions">
-        <button class="btn-line" type="button" @click="goBack">취소</button>
-        <button class="btn-solid" type="submit">
+        <button class="ui-btn ui-btn-ghost" type="button" @click="goBack">취소</button>
+        <button class="ui-btn ui-btn-primary" type="submit">
           {{ isEdit ? '수정하기' : '등록하기' }}
         </button>
       </div>
@@ -139,28 +139,25 @@ const goBack = () => {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #666;
+  color: var(--muted);
   margin: 0;
 }
 
 .title {
   margin: 6px 0 4px;
-  font-size: 24px;
-  font-weight: 900;
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 700;
 }
 
 .sub {
   margin: 0;
-  color: #666;
+  color: var(--muted);
   font-size: 14px;
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #ededed;
   border-radius: 14px;
   padding: 16px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
 .field {
@@ -170,17 +167,17 @@ const goBack = () => {
 }
 
 label {
-  font-weight: 800;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 input,
 textarea,
 select {
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   padding: 10px 12px;
-  background: #fafafa;
+  background: var(--bg-alt);
 }
 
 textarea {
@@ -193,26 +190,13 @@ textarea {
   gap: 10px;
 }
 
-.btn-line,
-.btn-solid {
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-weight: 800;
-  border: 1px solid #111;
-  background: #fff;
-}
-
-.btn-solid {
-  background: #111;
-  color: #fff;
-}
 
 .empty {
-  background: #f9f9f9;
-  border: 1px dashed #e3e3e3;
+  background: var(--bg-alt);
+  border: 1px dashed var(--border);
   border-radius: 12px;
   padding: 14px;
-  color: #666;
+  color: var(--muted);
   margin-top: 12px;
 }
 
@@ -220,8 +204,8 @@ textarea {
   background: none;
   border: none;
   padding: 0;
-  color: #0f62fe;
-  font-weight: 800;
+  color: var(--accent);
+  font-weight: 700;
   text-decoration: none;
 }
 </style>

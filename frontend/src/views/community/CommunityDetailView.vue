@@ -7,7 +7,7 @@
 
     <header class="head">
       <div>
-        <h1 class="title">{{ post.title }}</h1>
+        <h1 class="title serif-title">{{ post.title }}</h1>
         <div class="meta">
           <span>{{ post.author_name }}</span>
           <span>•</span>
@@ -15,12 +15,12 @@
         </div>
       </div>
       <div class="actions" v-if="post.is_author">
-        <button class="btn-line" @click="goEdit">수정</button>
-        <button class="btn-danger" @click="handleDelete">삭제</button>
+        <button class="ui-btn ui-btn-ghost" @click="goEdit">수정</button>
+        <button class="ui-btn ui-btn-danger" @click="handleDelete">삭제</button>
       </div>
     </header>
 
-    <article class="content card">
+    <article class="content card ui-card">
       <p class="body" v-text="post.content"></p>
       <div class="reactions">
         <button
@@ -40,7 +40,7 @@
       </div>
     </article>
 
-    <section class="comments card">
+    <section class="comments card ui-card">
       <div class="comment-head">
         <h3>댓글 {{ comments.length }}</h3>
         <p>의견을 남기고 다른 사람의 경험을 확인하세요.</p>
@@ -54,11 +54,11 @@
         />
         <div class="form-actions">
           <span class="hint">게시자는 본인 댓글만 수정/삭제할 수 있습니다.</span>
-          <button class="btn-solid" @click="submitComment" :disabled="!newComment.trim()">
+          <button class="ui-btn ui-btn-primary" @click="submitComment" :disabled="!newComment.trim()">
             등록
           </button>
         </div>
-        <p v-if="commentError" class="text-danger small mt-1">{{ commentError }}</p>
+        <p v-if="commentError" class="ui-text-danger small mt-1">{{ commentError }}</p>
       </div>
       <div v-else class="empty">
         댓글을 작성하려면 로그인 해주세요.
@@ -75,15 +75,15 @@
             </div>
             <div class="comment-actions" v-if="comment.is_author">
               <button class="link" @click="startEdit(comment)">수정</button>
-              <button class="link text-danger" @click="deleteComment(comment.id)">삭제</button>
+              <button class="link ui-text-danger" @click="deleteComment(comment.id)">삭제</button>
             </div>
           </div>
 
           <div v-if="editingCommentId === comment.id" class="edit-box">
             <textarea v-model="editingContent" rows="3" />
             <div class="gap">
-              <button class="btn-line" @click="cancelEdit">취소</button>
-              <button class="btn-solid" @click="saveComment">저장</button>
+              <button class="ui-btn ui-btn-ghost" @click="cancelEdit">취소</button>
+              <button class="ui-btn ui-btn-primary" @click="saveComment">저장</button>
             </div>
           </div>
           <p v-else class="comment-body">{{ comment.content }}</p>
@@ -263,18 +263,18 @@ const reactComment = async (commentId, reaction) => {
   background: none;
   border: none;
   padding: 0;
-  color: #0f62fe;
+  color: var(--accent);
   text-decoration: none;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .pill {
   padding: 6px 10px;
-  background: #f3f6ff;
-  border: 1px solid #e0e6ff;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
   border-radius: 999px;
   font-size: 12px;
-  color: #1f2a5c;
+  color: var(--ink-soft);
 }
 
 .head {
@@ -287,14 +287,14 @@ const reactComment = async (commentId, reaction) => {
 
 .title {
   margin: 0;
-  font-size: 24px;
-  font-weight: 900;
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 700;
 }
 
 .meta {
   display: flex;
   gap: 6px;
-  color: #666;
+  color: var(--muted);
   font-size: 13px;
   margin-top: 6px;
 }
@@ -307,16 +307,13 @@ const reactComment = async (commentId, reaction) => {
 .content {
   padding: 16px;
   margin-bottom: 16px;
-  border: 1px solid #ededed;
   border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
 .body {
   white-space: pre-line;
   line-height: 1.6;
-  color: #222;
+  color: var(--ink-soft);
   margin: 0 0 10px;
 }
 
@@ -327,32 +324,29 @@ const reactComment = async (commentId, reaction) => {
 }
 
 .comments {
-  border: 1px solid #ededed;
   border-radius: 14px;
   padding: 16px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
 .comment-head h3 {
   margin: 0;
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .comment-head p {
   margin: 2px 0 10px;
-  color: #666;
+  color: var(--muted);
   font-size: 13px;
 }
 
 .comment-form textarea,
 .edit-box textarea {
   width: 100%;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   padding: 10px;
-  background: #fafafa;
+  background: var(--bg-alt);
 }
 
 .form-actions {
@@ -365,7 +359,7 @@ const reactComment = async (commentId, reaction) => {
 
 .hint {
   font-size: 12px;
-  color: #777;
+  color: var(--muted);
 }
 
 .comment-list {
@@ -377,10 +371,10 @@ const reactComment = async (commentId, reaction) => {
 }
 
 .comment-item {
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px;
-  background: #fafafa;
+  background: var(--bg-alt);
 }
 
 .comment-meta {
@@ -390,12 +384,12 @@ const reactComment = async (commentId, reaction) => {
 }
 
 .author {
-  font-weight: 800;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .date {
-  color: #777;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -410,47 +404,27 @@ const reactComment = async (commentId, reaction) => {
 }
 
 .chip {
-  border: 1px solid #e0e0e0;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   border-radius: 999px;
   padding: 6px 10px;
-  font-weight: 700;
-  color: #333;
+  font-weight: 600;
+  color: var(--ink-soft);
 }
 
 .chip.active {
-  border-color: #111;
-  background: #111;
+  border-color: var(--accent);
+  background: var(--accent);
   color: #fff;
 }
 
-.btn-line,
-.btn-danger,
-.btn-solid {
-  border-radius: 10px;
-  font-weight: 800;
-  padding: 8px 12px;
-  border: 1px solid #111;
-  background: #fff;
-  color: #111;
-}
-
-.btn-solid {
-  background: #111;
-  color: #fff;
-}
-
-.btn-danger {
-  border-color: #d00000;
-  color: #d00000;
-}
 
 .empty {
-  background: #f9f9f9;
-  border: 1px dashed #e3e3e3;
+  background: var(--bg-alt);
+  border: 1px dashed var(--border);
   border-radius: 12px;
   padding: 14px;
-  color: #666;
+  color: var(--muted);
   text-align: center;
 }
 

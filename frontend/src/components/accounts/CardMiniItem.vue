@@ -1,5 +1,5 @@
 <template>
-  <div class="card-mini" @click="$emit('click')">
+  <div class="card-mini ui-card" @click="$emit('click')">
     <div class="card-img-wrap">
       <img
         :src="card.image_url"
@@ -45,23 +45,21 @@ function handleImageError(e) {
   display: flex;
   gap: 12px;
   padding: 12px;
-  border: 1px solid #efefef;
   border-radius: 12px;
-  background: #fff;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .card-mini:hover {
-  border-color: #ddd;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-color: rgba(27, 95, 122, 0.3);
+  box-shadow: var(--shadow-1);
 }
 
 .card-img-wrap {
   flex-shrink: 0;
   width: 80px;
   height: 50px;
-  background: #f8f9fa;
+  background: var(--bg-alt);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -82,14 +80,14 @@ function handleImageError(e) {
 
 .card-company {
   font-size: 11px;
-  color: #888;
+  color: var(--muted);
   margin-bottom: 2px;
 }
 
 .card-name {
   font-size: 13px;
   font-weight: 600;
-  color: #111;
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

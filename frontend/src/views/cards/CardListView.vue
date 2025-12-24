@@ -5,9 +5,9 @@
       <!-- 헤더 -->
       <div class="head">
         <div>
-          <div class="badge">Cards</div>
-          <h1 class="title">카드 검색</h1>
-          <p class="sub">원하는 카드를 검색하고 비교해보세요.</p>
+          <div class="ui-badge">Cards</div>
+          <h1 class="ui-title serif-title">카드 검색</h1>
+          <p class="ui-sub">원하는 카드를 검색하고 비교해보세요.</p>
         </div>
 
         <div class="count" v-if="!isLoading && !error">
@@ -16,7 +16,7 @@
       </div>
 
       <!-- 검색/필터 -->
-      <div class="filters">
+      <div class="filters ui-card">
         <div class="row">
           <!-- 검색어 -->
           <div class="field span-2">
@@ -29,7 +29,7 @@
                 placeholder="카드명, 카드사, 혜택 검색..."
                 @keyup.enter="handleSearch"
               />
-              <button class="btn-solid" @click="handleSearch">검색</button>
+              <button class="ui-btn ui-btn-primary" @click="handleSearch">검색</button>
             </div>
           </div>
 
@@ -57,7 +57,7 @@
           <!-- 초기화 -->
           <div class="field">
             <label class="label">&nbsp;</label>
-            <button class="btn-ghost w100" @click="resetFilters" title="필터 초기화">
+            <button class="ui-btn ui-btn-ghost w100" @click="resetFilters" title="필터 초기화">
               초기화
             </button>
           </div>
@@ -81,7 +81,7 @@
           <div
             v-for="card in cards"
             :key="card.id"
-            class="card"
+            class="card ui-card"
             @click="goToDetail(card.id)"
           >
             <!-- 이미지 -->
@@ -96,11 +96,11 @@
 
             <div class="body">
               <div class="badges">
-                <span class="b">{{ card.company }}</span>
-                <span class="b" :class="card.card_type === 'credit' ? 'primary' : 'success'">
+                <span class="ui-badge">{{ card.company }}</span>
+                <span class="ui-badge" :class="card.card_type === 'credit' ? 'ui-badge-primary' : 'ui-badge-success'">
                   {{ card.card_type === 'credit' ? '신용' : '체크' }}
                 </span>
-                <span v-if="card.ranking" class="b warning">
+                <span v-if="card.ranking" class="ui-badge ui-badge-warning">
                   {{ card.ranking }}위
                 </span>
               </div>
@@ -228,7 +228,9 @@ function handleImageError(event) {
 /* 전체 배경 */
 .page {
   min-height: 100%;
-  background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+  background:
+    radial-gradient(900px 300px at 10% 0%, rgba(27, 95, 122, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
 }
 
 /* 헤더 */
@@ -240,45 +242,21 @@ function handleImageError(event) {
   margin-bottom: 14px;
 }
 
-.badge {
-  display: inline-block;
-  font-size: 12px;
-  color: #444;
-  background: #f6f6f6;
-  border: 1px solid #ededed;
-  padding: 6px 10px;
-  border-radius: 999px;
-}
-
-.title {
-  margin: 10px 0 6px;
-  font-size: 26px;
-  font-weight: 950;
-  letter-spacing: -0.4px;
-  color: #111;
-}
-
-.sub {
-  margin: 0;
-  font-size: 13px;
-  color: #777;
-}
+.ui-title { margin: 10px 0 6px; }
+.ui-sub { margin: 0; }
 
 .count {
   font-size: 13px;
-  color: #777;
+  color: var(--muted);
 }
 .count strong {
-  color: #111;
+  color: var(--ink);
 }
 
 /* 필터 박스 */
 .filters {
-  border: 1px solid #efefef;
   border-radius: 16px;
-  background: #fff;
   padding: 14px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.06);
   margin-bottom: 14px;
 }
 
@@ -291,8 +269,8 @@ function handleImageError(event) {
 .field { display: grid; gap: 6px; }
 .label {
   font-size: 12px;
-  font-weight: 900;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .search-row {
@@ -303,44 +281,19 @@ function handleImageError(event) {
 
 .input, .select {
   height: 42px;
-  border-radius: 12px;
-  border: 1px solid #eaeaea;
-  background: #fff;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
   padding: 0 12px;
   font-size: 14px;
   outline: none;
 }
 
 .input:focus, .select:focus {
-  border-color: #d8d8d8;
-  box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.06);
+  border-color: rgba(27, 95, 122, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(27, 95, 122, 0.15);
 }
 
-.btn-solid {
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid #111;
-  background: #111;
-  color: #fff;
-  font-weight: 900;
-  font-size: 13px;
-  padding: 0 14px;
-  cursor: pointer;
-}
-.btn-solid:hover { background: #000; }
-
-.btn-ghost {
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
-  color: #222;
-  font-weight: 900;
-  font-size: 13px;
-  cursor: pointer;
-}
-.btn-ghost:hover { background: #fafafa; }
-.w100 { width: 100%; }
 
 /* 상태 */
 .state {
@@ -349,7 +302,7 @@ function handleImageError(event) {
 }
 .state-sub {
   margin-top: 12px;
-  color: #777;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -361,25 +314,22 @@ function handleImageError(event) {
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #efefef;
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.06);
 }
 
 .card:hover {
   transform: translateY(-2px);
-  border-color: #e3e3e3;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.10), 0 14px 28px rgba(0,0,0,0.08);
+  border-color: rgba(27, 95, 122, 0.3);
+  box-shadow: var(--shadow-2);
 }
 
 .img-wrap {
   height: 160px;
-  background: #fafafa;
-  border-bottom: 1px solid #f0f0f0;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
   display: grid;
   place-items: center;
   padding: 10px;
@@ -403,26 +353,10 @@ function handleImageError(event) {
   flex-wrap: wrap;
 }
 
-.b {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid #ededed;
-  background: #f6f6f6;
-  color: #333;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.b.primary { background: #111; border-color: #111; color: #fff; }
-.b.success { background: #0f5132; border-color: #0f5132; color: #fff; }
-.b.warning { background: #fff3cd; border-color: #ffe69c; color: #7a5a00; }
 
 .name {
-  font-weight: 900;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
   font-size: 14px;
   line-height: 1.35;
   display: -webkit-box;
@@ -433,7 +367,7 @@ function handleImageError(event) {
 
 .benefit {
   font-size: 13px;
-  color: #666;
+  color: var(--ink-soft);
   line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -443,7 +377,7 @@ function handleImageError(event) {
 
 .fee {
   font-size: 12px;
-  color: #777;
+  color: var(--muted);
   text-align: right;
 }
 
@@ -451,19 +385,19 @@ function handleImageError(event) {
 .empty {
   margin-top: 14px;
   padding: 18px;
-  border: 1px solid #efefef;
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: #fff;
+  background: var(--surface);
   text-align: center;
 }
 .empty-title {
-  font-weight: 900;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
   margin-bottom: 6px;
 }
 .empty-sub {
   font-size: 13px;
-  color: #777;
+  color: var(--muted);
 }
 
 /* 반응형 */

@@ -24,7 +24,7 @@ const menuItems = [
 <template>
   <nav class="navbar navbar-expand-lg sticky-top app-nav">
     <div class="container-fluid px-3 px-lg-4">
-      <RouterLink :to="{ name: 'main' }" class="navbar-brand brand">
+      <RouterLink :to="{ name: 'main' }" class="navbar-brand brand serif-title">
         BankBank
       </RouterLink>
 
@@ -64,73 +64,74 @@ const menuItems = [
 <style scoped>
 /* 유리 느낌 + 미니멀 */
 .app-nav {
-  background: rgba(255,255,255,0.86);
-  border-bottom: 1px solid #efefef;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(251, 249, 245, 0.85));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.06);
 }
 
 .brand {
-  font-weight: 900;
-  letter-spacing: -0.6px;
-  color: #111;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--ink);
   text-decoration: none;
 }
 
 .nav-links .nav-link {
-  color: #444;
+  color: var(--ink-soft);
   font-weight: 600;
   font-size: 14px;
   padding: 10px 10px;
-  border-radius: 10px;
+  border-radius: 999px;
 }
 
 .nav-links .nav-link:hover {
-  background: #fafafa;
-  color: #111;
+  background: var(--bg-alt);
+  color: var(--ink);
 }
 
 .nav-links .nav-link.active {
-  color: #111;
+  color: var(--ink);
   position: relative;
 }
 
 .nav-links .nav-link.active::after {
   content: "";
   position: absolute;
-  left: 10px;
-  right: 10px;
+  left: 12px;
+  right: 12px;
   bottom: 6px;
   height: 2px;
-  background: #111;
+  background: var(--accent);
   border-radius: 999px;
 }
 
 /* 버튼 톤 통일 */
 .btn {
-  border-radius: 12px;
-  font-weight: 700;
+  border-radius: 999px;
+  font-weight: 600;
   padding: 8px 12px;
   border: 1px solid transparent;
 }
 
 .btn-ghost {
-  background: #fff;
-  border-color: #e8e8e8;
-  color: #222;
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--ink-soft);
 }
-.btn-ghost:hover { background: #fafafa; }
+.btn-ghost:hover { background: var(--bg-alt); color: var(--ink); }
 
 .btn-solid {
-  background: #111;
+  background: var(--accent);
   color: #fff;
 }
-.btn-solid:hover { background: #000; }
+.btn-solid:hover { background: var(--accent-strong); }
 
 .btn-muted {
-  background: #f2f2f2;
-  border-color: #e8e8e8;
-  color: #222;
+  background: var(--bg-alt);
+  border-color: var(--border);
+  color: var(--ink-soft);
 }
-.btn-muted:hover { background: #ededed; }
+.btn-muted:hover { background: #f4efe6; color: var(--ink); }
 </style>

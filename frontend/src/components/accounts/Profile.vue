@@ -1,9 +1,9 @@
 <template>
-  <div class="container profile-shell">
+  <div class="container profile-shell ui-card">
     <div v-if="loading" class="sub">로딩중...</div>
 
     <template v-else>
-      <div class="container profile-shell">
+      <div class="container profile-shell ui-card">
         <!-- Header (그대로) -->
         <div class="header">
           <div class="avatar-wrap">
@@ -11,7 +11,7 @@
           </div>
 
           <div class="header-text">
-            <h1 class="title">{{ account.username }}</h1>
+            <h1 class="title serif-title">{{ account.username }}</h1>
             <p class="sub">{{ account.greeting || '아직 인사말이 없습니다. 작성해주세요.' }}</p>
           </div>
 
@@ -29,7 +29,7 @@
           <div
             v-for="(info, idx) in infos"
             :key="info.id"
-            class="card"
+            class="card ui-card"
             style="cursor: pointer;"
             @click="openInfoModal(idx)"
           >
@@ -40,7 +40,7 @@
           </div>
 
           <!-- ✅ + 카드: 클릭하면 새 정보 모달 -->
-          <div class="card" @click="openInfoModal(null)" style="cursor: pointer; text-align: center;">
+          <div class="card ui-card" @click="openInfoModal(null)" style="cursor: pointer; text-align: center;">
             <div class="card-title">+</div>
             <div class="card-body">정보 추가</div>
           </div>
@@ -179,29 +179,24 @@ const removeInfo = () => {
 
 <style scoped>
 /* ✅ 너가 올린 기존 CSS 그대로 */
-.profile-shell { margin-top: 5%; padding: 24px; border: 1px solid #ececec; border-radius: 14px; background: #ffffff; }
+.profile-shell { margin-top: 5%; padding: 24px; border-radius: 14px; }
 .header { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
 .avatar-wrap { display: flex; align-items: center; justify-content: center; }
-.avatar { width: 64px; height: 64px; border-radius: 999px; object-fit: cover; border: 1px solid #ededed; }
-.title { margin: 0; font-size: 20px; font-weight: 750; letter-spacing: -0.2px; }
-.sub { margin: 6px 0 0; font-size: 13px; color: #777; }
+.avatar { width: 64px; height: 64px; border-radius: 999px; object-fit: cover; border: 1px solid var(--border); }
+.title { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.2px; color: var(--ink); }
+.sub { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
 .header-actions { display: flex; gap: 8px; }
-.btn { height: 34px; padding: 0 12px; border-radius: 10px; font-size: 13px; cursor: pointer; border: 1px solid transparent; }
-.btn.ghost { background: #fff; border-color: #e8e8e8; color: #222; }
-.btn.ghost:hover { background: #fafafa; }
-.btn.solid { background: #111; color: #fff; }
-.btn.solid:hover { background: #000; }
-.divider { height: 1px; background: #f0f0f0; margin: 18px 0; }
+.btn { height: var(--btn-h-sm); padding: 0 12px; border-radius: 999px; font-size: 13px; cursor: pointer; border: 1px solid transparent; font-weight: 600; }
+.btn.ghost { background: var(--surface); border-color: var(--border); color: var(--ink-soft); }
+.btn.ghost:hover { background: var(--bg-alt); color: var(--ink); }
+.btn.solid { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.solid:hover { background: var(--accent-strong); }
+.divider { height: 1px; background: var(--border); margin: 18px 0; }
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .card {
-  border: 1px solid #efefef;
   border-radius: 12px;
   padding: 14px;
-  background: #fff;
-
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    0 4px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
 
   transition: background 0.12s ease,
               border-color 0.12s ease,
@@ -209,15 +204,15 @@ const removeInfo = () => {
 }
 
 .card:hover {
-  background: #fcfcfc;
-  border-color: #e7e7e7;
+  background: var(--bg-alt);
+  border-color: rgba(27, 95, 122, 0.3);
 
   /* 👇 hover 시만 살짝 강조 */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-2);
 }
 
-.card-title { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 8px; }
-.card-body { font-size: 13px; color: #555; line-height: 1.45; }
+.card-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+.card-body { font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
 @media (max-width: 992px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 576px) {
   .header { grid-template-columns: auto 1fr; }

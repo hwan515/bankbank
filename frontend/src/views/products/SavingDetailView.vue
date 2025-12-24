@@ -12,9 +12,9 @@
       <template v-else-if="product">
         <!-- 상단 헤더 -->
         <div class="head">
-          <div class="badge">Saving</div>
-          <h1 class="title">적금 상세</h1>
-          <p class="sub">
+          <div class="ui-badge">Saving</div>
+          <h1 class="ui-title serif-title">적금 상세</h1>
+          <p class="ui-sub">
             {{ product.kor_co_nm }} · {{ product.fin_prdt_nm }}
           </p>
         </div>
@@ -22,7 +22,7 @@
         <div class="layout">
           <!-- 왼쪽: 요약 + 액션 -->
           <div class="left">
-            <div class="box">
+            <div class="box ui-card">
               <div class="box-head">
                 <div class="box-title">요약</div>
               </div>
@@ -53,16 +53,69 @@
                   </div>
                 </div>
 
+                <div class="field mt2">
+                  <label class="label">가입 기간</label>
+                  <select v-model="selectedTerm" class="select">
+                    <option value="">선택</option>
+                    <option v-for="term in availableTerms" :key="term" :value="String(term)">
+                      {{ term }}개월
+                    </option>
+                  </select>
+                </div>
+
+                <div class="field mt2">
+                  <label class="label">적립 방식</label>
+                  <select v-model="selectedSavingType" class="select">
+                    <option value="">선택</option>
+                    <option v-for="type in availableSavingTypes" :key="type" :value="type">
+                      {{ type }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="field mt2">
+                  <label class="label">월 납입액(원)</label>
+                  <input
+                    v-model.number="monthlyAmount"
+                    type="number"
+                    class="input"
+                    min="0"
+                    placeholder="예: 300000"
+                  />
+                </div>
+
+                <div v-if="estimatedTotal != null" class="estimate mt2">
+                  <div class="estimate-row">
+                    <span class="ek">예상 이자</span>
+                    <span class="ev">{{ estimatedInterest.toLocaleString() }}원</span>
+                  </div>
+                  <div class="estimate-row">
+                    <span class="ek">예상 만기수령액</span>
+                    <span class="ev strong">{{ estimatedTotal.toLocaleString() }}원</span>
+                  </div>
+                  <div class="estimate-note">* 단순 계산(세전) 기준입니다.</div>
+                </div>
+
                 <div class="cta">
-                  <button
-                    v-if="isAuthenticated"
-                    class="btn-solid"
-                    :class="{ danger: subscribed }"
-                    @click="toggleSubscription"
-                    :disabled="subscribing"
-                  >
-                    {{ subscribing ? '처리중...' : (subscribed ? '가입 해제하기' : '가입하기') }}
-                  </button>
+                  <template v-if="isAuthenticated">
+                    <button
+                      class="ui-btn w100"
+                      :class="subscribed ? 'ui-btn-danger' : 'ui-btn-primary'"
+                      @click="toggleSubscription"
+                      :disabled="subscribing || (!subscribed && !selectedTerm)"
+                    >
+                      {{ subscribing ? '처리중...' : (subscribed ? '가입 해제하기' : '가입하기') }}
+                    </button>
+
+                    <button
+                      v-if="subscribed"
+                      class="ui-btn ui-btn-ghost w100 mt2"
+                      @click="updateSubscriptionTerm"
+                      :disabled="subscribing || !canUpdateTerm"
+                    >
+                      기간 변경
+                    </button>
+                  </template>
 
                   <p v-else class="muted">
                     상품에 가입하려면
@@ -72,7 +125,7 @@
               </div>
             </div>
 
-            <router-link to="/products" class="btn-ghost mt">
+            <router-link to="/products" class="ui-btn ui-btn-ghost mt">
               ← 목록으로 돌아가기
             </router-link>
           </div>
@@ -80,7 +133,7 @@
           <!-- 오른쪽: 상세 정보 + 옵션 -->
           <div class="right">
             <!-- 상세 정보 -->
-            <div class="box mb">
+            <div class="box ui-card mb">
               <div class="box-head">
                 <div class="box-title">상품 정보</div>
               </div>
@@ -108,7 +161,7 @@
             </div>
 
             <!-- 금리 옵션 -->
-            <div class="box">
+            <div class="box ui-card">
               <div class="box-head">
                 <div class="box-title">금리 옵션</div>
               </div>
@@ -149,7 +202,7 @@
       <!-- 실패 -->
       <div v-else class="state">
         <div class="alert alert-danger">상품 정보를 불러올 수 없습니다.</div>
-        <router-link to="/products" class="btn-ghost mt">← 목록으로 돌아가기</router-link>
+        <router-link to="/products" class="ui-btn ui-btn-ghost mt">← 목록으로 돌아가기</router-link>
       </div>
 
     </div>
@@ -157,6 +210,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useProductDetail } from '@/composables/useProductDetail'
 
 const {
@@ -165,16 +219,71 @@ const {
   subscribed,
   subscribing,
   isAuthenticated,
+  selectedTerm,
+  selectedSavingType,
+  monthlyAmount,
+  availableTerms,
+  availableSavingTypes,
+  canUpdateTerm,
   getJoinDenyText,
-  toggleSubscription
+  toggleSubscription,
+  updateSubscriptionTerm
 } = useProductDetail('saving')
+
+const rateForEstimate = computed(() => {
+  const productData = product.value
+  const term = Number(selectedTerm.value)
+  if (!productData || !Number.isFinite(term)) return null
+
+  let options = productData.saving_options || []
+  if (selectedSavingType.value) {
+    options = options.filter((option) => option.rsrv_type_nm === selectedSavingType.value)
+  }
+  options = options.filter((option) => Number(option.save_trm) === term)
+  if (!options.length) return null
+
+  let bestRate = null
+  options.forEach((option) => {
+    const rawRate = option.intr_rate2 != null ? option.intr_rate2 : option.intr_rate
+    const rate = Number(rawRate)
+    if (Number.isFinite(rate)) {
+      if (bestRate == null || rate > bestRate) {
+        bestRate = rate
+      }
+    }
+  })
+  return bestRate
+})
+
+const estimatedInterest = computed(() => {
+  const amount = Number(monthlyAmount.value)
+  const term = Number(selectedTerm.value)
+  const rate = Number(rateForEstimate.value)
+  if (!Number.isFinite(amount) || amount <= 0) return null
+  if (!Number.isFinite(term) || term <= 0) return null
+  if (!Number.isFinite(rate) || rate <= 0) return null
+
+  const monthlyRate = rate / 100 / 12
+  const interest = amount * (term * (term + 1) / 2) * monthlyRate
+  return Math.round(interest)
+})
+
+const estimatedTotal = computed(() => {
+  if (estimatedInterest.value == null) return null
+  const amount = Number(monthlyAmount.value)
+  const term = Number(selectedTerm.value)
+  if (!Number.isFinite(amount) || !Number.isFinite(term)) return null
+  return Math.round(amount * term + estimatedInterest.value)
+})
 </script>
 
 <style scoped>
 /* 배경 */
 .page {
   min-height: 100%;
-  background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+  background:
+    radial-gradient(900px 300px at 10% 0%, rgba(27, 95, 122, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
 }
 
 /* 상태 */
@@ -184,32 +293,14 @@ const {
 }
 .state-sub {
   margin-top: 12px;
-  color: #777;
+  color: var(--muted);
   font-size: 13px;
 }
 
 /* 헤더 */
 .head { margin-bottom: 14px; }
-.badge {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid #ededed;
-  background: #f6f6f6;
-  color: #333;
-  font-size: 12px;
-  font-weight: 900;
-}
-.title {
-  margin: 10px 0 6px;
-  font-size: 26px;
-  font-weight: 950;
-  letter-spacing: -0.4px;
-  color: #111;
-}
-.sub { margin: 0; font-size: 13px; color: #777; }
+.ui-title { margin: 10px 0 6px; }
+.ui-sub { margin: 0; }
 
 /* 레이아웃 */
 .layout {
@@ -223,22 +314,46 @@ const {
 
 /* 공통 박스 */
 .box {
-  background: #fff;
-  border: 1px solid #efefef;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.06);
 }
 .box-head {
   padding: 14px 14px 10px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
 }
-.box-title { font-weight: 900; letter-spacing: -0.2px; color: #111; }
+.box-title { font-weight: 700; letter-spacing: -0.2px; color: var(--ink); }
 .box-body { padding: 14px; }
 
 .mb { margin-bottom: 14px; }
 .mt { margin-top: 12px; }
 .mt2 { margin-top: 10px; }
+.field { display: grid; gap: 6px; }
+.label { font-size: 12px; font-weight: 700; color: var(--ink); }
+.select, .input {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0 10px;
+  font-size: 14px;
+}
+.estimate {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+.estimate-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.estimate-note {
+  font-size: 11px;
+  color: var(--muted);
+}
 
 /* Key-Value */
 .kv-row {
@@ -246,55 +361,17 @@ const {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid #f2f2f2;
+  border-bottom: 1px solid var(--border);
 }
 .kv-row:last-child { border-bottom: 0; }
-.k { color: #777; font-size: 13px; }
-.v { color: #111; font-size: 13px; font-weight: 900; }
+.k { color: var(--muted); font-size: 13px; }
+.v { color: var(--ink); font-size: 13px; font-weight: 700; }
 
 /* CTA */
 .cta { margin-top: 12px; }
-.muted { color: #777; font-size: 13px; margin: 0; }
-.link { color: #111; font-weight: 900; text-decoration: none; }
+.muted { color: var(--muted); font-size: 13px; margin: 0; }
+.link { color: var(--accent); font-weight: 700; text-decoration: none; }
 .link:hover { text-decoration: underline; }
-
-/* 버튼 */
-.btn-solid {
-  width: 100%;
-  height: 44px;
-  border-radius: 14px;
-  border: 1px solid #111;
-  background: #111;
-  color: #fff;
-  font-weight: 900;
-  font-size: 14px;
-  cursor: pointer;
-}
-.btn-solid:hover { background: #000; }
-.btn-solid:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-solid.danger {
-  background: #fff;
-  color: #111;
-  border-color: #e8e8e8;
-}
-.btn-solid.danger:hover { background: #fafafa; }
-
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
-  color: #222;
-  font-weight: 900;
-  font-size: 13px;
-  text-decoration: none;
-  cursor: pointer;
-}
-.btn-ghost:hover { background: #fafafa; }
 
 /* 정보 그리드 */
 .info-grid {
@@ -303,15 +380,15 @@ const {
   gap: 10px;
 }
 .info-item {
-  border: 1px solid #efefef;
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px;
-  background: #fff;
+  background: var(--surface);
 }
 .info-item.span-2 { grid-column: 1 / -1; }
 
-.ik { font-size: 12px; font-weight: 900; color: #111; margin-bottom: 6px; }
-.iv { font-size: 13px; color: #555; line-height: 1.5; }
+.ik { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.iv { font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
 .pre { white-space: pre-line; }
 
 /* 테이블 */
@@ -324,17 +401,17 @@ const {
 .t thead th {
   text-align: left;
   font-size: 12px;
-  font-weight: 900;
-  color: #111;
-  background: #fafafa;
-  border-bottom: 1px solid #efefef;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
   padding: 10px 10px;
   white-space: nowrap;
 }
 .t tbody td {
   font-size: 13px;
-  color: #444;
-  border-bottom: 1px solid #f2f2f2;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--border);
   padding: 10px 10px;
   white-space: nowrap;
 }

@@ -5,9 +5,9 @@
       <!-- 헤더 -->
       <div class="head">
         <div>
-          <div class="badge">Cards</div>
-          <h1 class="title">카드</h1>
-          <p class="sub">원하는 카드를 검색하거나 AI 추천을 받아보세요.</p>
+          <div class="ui-badge">Cards</div>
+          <h1 class="ui-title serif-title">카드</h1>
+          <p class="ui-sub">원하는 카드를 검색하거나 AI 추천을 받아보세요.</p>
         </div>
       </div>
 
@@ -24,7 +24,7 @@
       <!-- SEARCH -->
       <div v-show="activeTab === 'search'">
         <!-- 검색 및 필터 -->
-        <div class="card shadow-sm mb-4">
+        <div class="card ui-card shadow-sm mb-4">
           <div class="card-body">
             <div class="row g-3">
               <div class="col-md-4">
@@ -36,7 +36,7 @@
                     placeholder="카드명, 카드사, 혜택 검색..."
                     @keyup.enter="handleSearch"
                   />
-                  <button class="btn-solid" @click="handleSearch">검색</button>
+                  <button class="ui-btn ui-btn-primary" @click="handleSearch">검색</button>
                 </div>
               </div>
               <div class="col-md-2">
@@ -63,7 +63,7 @@
                 </select>
               </div>
               <div class="col-md-1">
-                <button class="btn btn-outline-secondary w-100" @click="resetFilters">초기화</button>
+                <button class="ui-btn ui-btn-ghost w100" @click="resetFilters">초기화</button>
               </div>
             </div>
           </div>
@@ -133,7 +133,7 @@
 
         <!-- 일반 추천 -->
         <div v-show="recommendMode === 'query'">
-          <div class="card shadow-sm mb-4">
+          <div class="card ui-card shadow-sm mb-4">
             <div class="card-body p-4">
               <form @submit.prevent="handleRecommend">
                 <div class="input-group input-group-lg mb-3">
@@ -144,7 +144,7 @@
                     placeholder="예: 스타벅스 할인 많은 카드, 주유 혜택 좋은 카드"
                     :disabled="isLoading"
                   />
-                  <button type="submit" class="btn btn-primary px-4" :disabled="isLoading || !recommendQuery.trim()">
+                  <button type="submit" class="ui-btn ui-btn-primary" :disabled="isLoading || !recommendQuery.trim()">
                     <span v-if="isLoading && activeTab === 'recommend'" class="spinner-border spinner-border-sm me-2"></span>
                     {{ isLoading && activeTab === 'recommend' ? '검색 중...' : '추천받기' }}
                   </button>
@@ -154,24 +154,31 @@
                 <div class="mb-3">
                   <button
                     type="button"
-                    class="btn btn-sm btn-outline-secondary"
+                    class="ui-btn ui-btn-ghost ui-btn-sm"
                     @click="showFilters = !showFilters"
                   >
                     <i class="bi" :class="showFilters ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
                     필터 옵션 {{ showFilters ? '접기' : '펼치기' }}
                   </button>
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn-ghost ui-btn-sm ms-2"
+                    @click="resetRecommendFilters"
+                  >
+                    필터 초기화
+                  </button>
                 </div>
 
                 <div v-show="showFilters" class="row g-3 mb-3">
                   <div class="col-md-3">
-                    <label class="form-label small text-muted">카드사</label>
+                    <label class="form-label small ui-text-muted">카드사</label>
                     <select v-model="recFilters.company" class="form-select form-select-sm">
                       <option value="">전체</option>
                       <option v-for="c in companies" :key="c" :value="c">{{ c }}</option>
                     </select>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label small text-muted">카드 종류</label>
+                    <label class="form-label small ui-text-muted">카드 종류</label>
                     <select v-model="recFilters.card_type" class="form-select form-select-sm">
                       <option value="">전체</option>
                       <option value="CRD">신용카드</option>
@@ -179,7 +186,7 @@
                     </select>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label small text-muted">연회비 상한</label>
+                    <label class="form-label small ui-text-muted">연회비 상한</label>
                     <select v-model="recFilters.max_annual_fee" class="form-select form-select-sm">
                       <option :value="null">제한 없음</option>
                       <option :value="0">무료</option>
@@ -190,7 +197,7 @@
                     </select>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label small text-muted">전월실적 상한</label>
+                    <label class="form-label small ui-text-muted">전월실적 상한</label>
                     <select v-model="recFilters.max_min_spending" class="form-select form-select-sm">
                       <option :value="null">제한 없음</option>
                       <option :value="0">조건 없음</option>
@@ -231,7 +238,7 @@
           <!-- 추천 결과 -->
           <div v-else-if="recommendedCards.length > 0">
             <div class="result-head">
-              <span class="badge primary">{{ recommendedCards.length }}</span>
+              <span class="ui-badge ui-badge-primary">{{ recommendedCards.length }}</span>
               <span class="result-text">"{{ lastQuery }}" 검색 결과</span>
             </div>
 
@@ -256,15 +263,15 @@
 
         <!-- 개인화 추천 -->
         <div v-show="recommendMode === 'personal'">
-          <div class="card shadow-sm mb-4">
+          <div class="card ui-card shadow-sm mb-4">
             <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
               <div>
                 <div class="title-sm">내 선호도로 추천 받기</div>
                 <p class="sub-sm mb-0">마이페이지에 저장한 카테고리 가중치, 연회비/실적 허용치를 그대로 사용해요.</p>
               </div>
               <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary" @click="goToPreference">선호도 수정</button>
-                <button class="btn btn-primary" :disabled="personalLoading" @click="handlePersonalRecommend">
+                <button class="ui-btn ui-btn-ghost" @click="goToPreference">선호도 수정</button>
+                <button class="ui-btn ui-btn-primary" :disabled="personalLoading" @click="handlePersonalRecommend">
                   <span v-if="personalLoading" class="spinner-border spinner-border-sm me-2"></span>
                   {{ personalLoading ? '불러오는 중...' : '추천 받기' }}
                 </button>
@@ -281,7 +288,7 @@
 
           <div v-else-if="personalizedRecommendations.length > 0">
             <div class="result-head">
-              <span class="badge primary">{{ personalizedRecommendations.length }}</span>
+              <span class="ui-badge ui-badge-primary">{{ personalizedRecommendations.length }}</span>
               <span class="result-text">내 선호도 기반 추천</span>
             </div>
 
@@ -435,6 +442,15 @@ function setRecommendQuery(query) {
   handleRecommend()
 }
 
+function resetRecommendFilters() {
+  recFilters.value = {
+    company: '',
+    card_type: '',
+    max_annual_fee: null,
+    max_min_spending: null
+  }
+}
+
 async function handleRecommend() {
   if (!recommendQuery.value.trim()) return
   try {
@@ -476,33 +492,16 @@ function goToDetail(cardId) {
 <style scoped>
 .page {
   min-height: 100%;
-  background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+  background:
+    radial-gradient(900px 300px at 10% 0%, rgba(27, 95, 122, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
 }
 
 /* 헤더 */
 .head { margin-bottom: 14px; }
-.badge {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid #ededed;
-  background: #f6f6f6;
-  color: #333;
-  font-size: 12px;
-  font-weight: 900;
-}
-.badge.primary { background: #111; border-color: #111; color: #fff; }
+.head .ui-title { margin: 10px 0 6px; }
 
-.title {
-  margin: 10px 0 6px;
-  font-size: 26px;
-  font-weight: 950;
-  letter-spacing: -0.4px;
-  color: #111;
-}
-.sub { margin: 0; font-size: 13px; color: #777; }
+.ui-sub { margin: 0; }
 
 /* 탭 */
 .tabs {
@@ -512,22 +511,22 @@ function goToDetail(cardId) {
   margin-bottom: 12px;
 }
 .tab {
-  height: 42px;
+  height: var(--btn-h);
   border-radius: 14px;
-  border: 1px solid #efefef;
-  background: #fff;
-  font-weight: 900;
-  color: #444;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 700;
+  color: var(--ink-soft);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 8px 18px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-1);
 }
 .tab.active {
-  background: #111;
-  border-color: #111;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 .tab i { font-size: 14px; }
@@ -538,15 +537,15 @@ function goToDetail(cardId) {
 }
 .recommend-tabs .tab {
   flex: 1;
-  height: 44px;
+  height: var(--btn-h);
 }
 
 /* 박스 */
 .box {
-  border: 1px solid #efefef;
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.06);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
 }
 .box-body { padding: 14px; }
 .mb { margin-bottom: 14px; }
@@ -557,7 +556,7 @@ function goToDetail(cardId) {
   gap: 12px;
 }
 .field { display: grid; gap: 6px; }
-.label { font-size: 12px; font-weight: 900; color: #111; }
+.label { font-size: 12px; font-weight: 700; color: var(--ink); }
 
 .search-row {
   display: grid;
@@ -566,48 +565,25 @@ function goToDetail(cardId) {
 }
 .input, .select {
   height: 42px;
-  border-radius: 12px;
-  border: 1px solid #eaeaea;
-  background: #fff;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
   padding: 0 12px;
   font-size: 14px;
   outline: none;
 }
 .input:focus, .select:focus {
-  border-color: #d8d8d8;
-  box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.06);
+  border-color: rgba(27, 95, 122, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(27, 95, 122, 0.15);
 }
-.btn-solid {
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid #111;
-  background: #111;
-  color: #fff;
-  font-weight: 900;
-  font-size: 13px;
-  padding: 0 14px;
-  cursor: pointer;
-}
-.btn-solid:hover { background: #000; }
-.btn-ghost {
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
-  color: #222;
-  font-weight: 900;
-  font-size: 13px;
-  cursor: pointer;
-}
-.btn-ghost:hover { background: #fafafa; }
 .w100 { width: 100%; }
 
 /* 상태 */
 .state { text-align: center; padding: 48px 0; }
-.state-sub { margin-top: 12px; color: #777; font-size: 13px; }
+.state-sub { margin-top: 12px; color: var(--muted); font-size: 13px; }
 .topline { margin: 10px 0 12px; }
-.muted { color: #777; font-size: 13px; }
-.strong { color: #111; }
+.muted { color: var(--muted); font-size: 13px; }
+.strong { color: var(--ink); }
 
 /* 카드 그리드 */
 .grid {
@@ -616,23 +592,23 @@ function goToDetail(cardId) {
   gap: 12px;
 }
 .card {
-  background: #fff;
-  border: 1px solid #efefef;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-1);
 }
 .card:hover {
   transform: translateY(-2px);
-  border-color: #e3e3e3;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.10), 0 14px 28px rgba(0,0,0,0.08);
+  border-color: rgba(27, 95, 122, 0.3);
+  box-shadow: var(--shadow-2);
 }
 .img-wrap {
   height: 160px;
-  background: #fafafa;
-  border-bottom: 1px solid #f0f0f0;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
   display: grid;
   place-items: center;
   padding: 10px;
@@ -646,18 +622,18 @@ function goToDetail(cardId) {
   height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid #ededed;
-  background: #f6f6f6;
-  color: #333;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--ink-soft);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
 }
-.b.primary { background: #111; border-color: #111; color: #fff; }
+.b.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .b.success { background: #0f5132; border-color: #0f5132; color: #fff; }
 .b.warning { background: #fff3cd; border-color: #ffe69c; color: #7a5a00; }
 .name {
-  font-weight: 900;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
   font-size: 14px;
   line-height: 1.35;
   display: -webkit-box;
@@ -667,25 +643,25 @@ function goToDetail(cardId) {
 }
 .benefit {
   font-size: 13px;
-  color: #666;
+  color: var(--ink-soft);
   line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.fee { font-size: 12px; color: #777; text-align: right; }
+.fee { font-size: 12px; color: var(--muted); text-align: right; }
 
 .empty {
   margin-top: 14px;
   padding: 18px;
-  border: 1px solid #efefef;
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: #fff;
+  background: var(--surface);
   text-align: center;
 }
-.empty-title { font-weight: 900; color: #111; margin-bottom: 6px; }
-.empty-sub { font-size: 13px; color: #777; }
+.empty-title { font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: var(--muted); }
 
 /* 추천 */
 .recommend-row {
@@ -695,20 +671,20 @@ function goToDetail(cardId) {
   align-items: center;
 }
 .examples { margin-top: 12px; }
-.examples-title { font-size: 12px; font-weight: 900; color: #111; margin-bottom: 8px; }
+.examples-title { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
-  color: #222;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-soft);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
   cursor: pointer;
 }
-.chip:hover { background: #fafafa; }
+.chip:hover { background: var(--bg-alt); color: var(--ink); }
 
 /* 추천 결과 */
 .result-head {
@@ -717,7 +693,7 @@ function goToDetail(cardId) {
   gap: 8px;
   margin: 10px 0 12px;
 }
-.result-text { font-weight: 900; color: #111; }
+.result-text { font-weight: 700; color: var(--ink); }
 
 .rec-list { display: grid; gap: 10px; }
 .rec-card {
@@ -726,27 +702,27 @@ function goToDetail(cardId) {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border: 1px solid #efefef;
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: #fff;
+  background: var(--surface);
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-1);
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
 }
 .rec-card:hover {
   transform: translateY(-1px);
-  border-color: #e3e3e3;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.10), 0 14px 28px rgba(0,0,0,0.08);
+  border-color: rgba(27, 95, 122, 0.3);
+  box-shadow: var(--shadow-2);
 }
 .rank {
   width: 54px; height: 54px;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  font-weight: 950;
-  border: 1px solid #efefef;
-  background: #fafafa;
-  color: #111;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--ink);
 }
 .rank.gold { background: #fff3cd; border-color: #ffe69c; color: #7a5a00; }
 .rank.silver { background: #f2f2f2; border-color: #e6e6e6; color: #444; }
@@ -755,8 +731,8 @@ function goToDetail(cardId) {
 .rec-img-wrap {
   height: 76px;
   border-radius: 14px;
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
   display: grid;
   place-items: center;
   padding: 6px;
@@ -764,10 +740,10 @@ function goToDetail(cardId) {
 .rec-img { width: 100%; height: 100%; object-fit: contain; }
 
 .rec-body { display: grid; gap: 6px; }
-.rec-name { font-weight: 950; color: #111; letter-spacing: -0.2px; }
+.rec-name { font-weight: 700; color: var(--ink); letter-spacing: -0.2px; }
 .rec-preview {
   font-size: 13px;
-  color: #666;
+  color: var(--ink-soft);
   line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -777,9 +753,9 @@ function goToDetail(cardId) {
 
 .score { text-align: right; }
 .small { font-size: 12px; }
-.score-num { font-size: 22px; font-weight: 950; }
+.score-num { font-size: 22px; font-weight: 700; }
 .score-num.good { color: #0f5132; }
-.score-num.mid { color: #111; }
+.score-num.mid { color: var(--ink); }
 .score-num.high { color: #7a5a00; }
 
 /* 반응형 */
@@ -794,7 +770,7 @@ function goToDetail(cardId) {
   .filter-row { grid-template-columns: 1fr; }
   .grid { grid-template-columns: 1fr; }
   .recommend-row { grid-template-columns: 1fr; }
-  .btn-solid { width: 100%; }
+  .search-row .ui-btn { width: 100%; }
   .rec-card { grid-template-columns: 54px 1fr; }
   .rec-img-wrap { grid-column: 1 / -1; height: 90px; }
 }

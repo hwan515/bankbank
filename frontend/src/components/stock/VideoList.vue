@@ -2,9 +2,9 @@
   <div class="page-shell">
     <div class="container py-4">
       <!-- ✅ 상단 툴바 (미니멀) -->
-      <div class="toolbar">
+      <div class="toolbar ui-card">
         <div class="toolbar-left">
-          <div class="title">관심 종목 영상</div>
+          <div class="title serif-title">관심 종목 영상</div>
           <div class="sub">검색하고, 관심 영상만 모아볼 수 있어요.</div>
         </div>
 
@@ -55,7 +55,9 @@ onMounted(() => {
 /* 배경 톤: 미니멀 */
 .page-shell {
   min-height: 100%;
-  background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+  background:
+    radial-gradient(900px 300px at 10% 0%, rgba(27, 95, 122, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
 }
 
 /* 상단 툴바 */
@@ -65,24 +67,20 @@ onMounted(() => {
   justify-content: space-between;
   gap: 12px;
   padding: 16px;
-  border: 1px solid #efefef;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.06);
   margin-bottom: 14px;
 }
 
 .toolbar-left .title {
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.3px;
-  color: #111;
-  font-size: 18px;
+  color: var(--ink);
+  font-size: clamp(16px, 1.6vw, 20px);
   margin-bottom: 4px;
 }
 
 .toolbar-left .sub {
   font-size: 13px;
-  color: #777;
+  color: var(--muted);
 }
 
 .toolbar-right {
@@ -94,13 +92,13 @@ onMounted(() => {
 
 /* 관심 버튼 미니멀 */
 .btn-mini {
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
-  color: #222;
-  font-weight: 800;
+  height: var(--btn-h);
+  padding: 0 var(--btn-pad-x);
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-weight: 600;
   font-size: 13px;
   display: inline-flex;
   align-items: center;
@@ -109,13 +107,14 @@ onMounted(() => {
 }
 
 .btn-mini:hover {
-  background: #fafafa;
+  background: var(--bg-alt);
+  color: var(--ink);
 }
 
 .btn-mini.is-on {
-  background: #111;
+  background: var(--accent);
   color: #fff;
-  border-color: #111;
+  border-color: var(--accent);
 }
 
 /* 그리드: 기존 bootstrap 느낌 유지하되, 더 미니멀 */
@@ -152,21 +151,21 @@ onMounted(() => {
 .empty {
   margin-top: 14px;
   padding: 18px;
-  border: 1px solid #efefef;
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: #fff;
+  background: var(--surface);
   text-align: center;
-  color: #555;
+  color: var(--muted);
 }
 
 .empty-title {
-  font-weight: 900;
-  color: #111;
+  font-weight: 700;
+  color: var(--ink);
   margin-bottom: 6px;
 }
 
 .empty-sub {
   font-size: 13px;
-  color: #777;
+  color: var(--muted);
 }
 </style>

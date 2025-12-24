@@ -5,7 +5,7 @@
       <div class="brand">
         <div class="dot" />
         <div>
-          <div class="brand-title">지도 검색</div>
+          <div class="brand-title serif-title">지도 검색</div>
           <div class="brand-sub">장소를 검색하고 경로를 확인하세요</div>
         </div>
       </div>
@@ -18,7 +18,7 @@
     <!-- 본문 -->
     <div class="layout">
       <!-- 지도 카드 -->
-      <section class="card map-card">
+      <section class="card ui-card map-card">
         <div class="card-head">
           <div class="card-title">Map</div>
           <div class="card-meta">Kakao Maps</div>
@@ -29,14 +29,14 @@
       </section>
 
       <!-- 결과 패널 -->
-      <aside class="card panel">
+      <aside class="card ui-card panel">
         <div class="card-head">
           <div>
             <div class="card-title">검색 결과</div>
             <div class="card-meta">{{ mapStore.places.length }}개</div>
           </div>
 
-          <button class="mini-btn" type="button" @click="mapStore.search('')">
+          <button class="mini-btn ui-btn ui-btn-ghost" type="button" @click="mapStore.search('')">
             초기화
           </button>
         </div>
@@ -55,7 +55,7 @@
           >
             <div class="item-top">
               <div class="name">{{ p.place_name }}</div>
-              <div v-if="p.distance" class="badge">{{ p.distance }}m</div>
+              <div v-if="p.distance" class="ui-badge">{{ p.distance }}m</div>
             </div>
 
             <div class="addr">{{ p.road_address_name || p.address_name }}</div>
@@ -111,7 +111,7 @@ onMounted(async () => {
   max-width: 1100px;
   margin: 28px auto;
   padding: 0 16px;
-  color: #111;
+  color: var(--ink);
 }
 
 /* Topbar */
@@ -133,18 +133,18 @@ onMounted(async () => {
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: #111;
+  background: var(--accent);
 }
 
 .brand-title {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.2px;
 }
 
 .brand-sub {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted);
   margin-top: 2px;
 }
 
@@ -163,9 +163,7 @@ onMounted(async () => {
 
 /* Card */
 .card {
-  border: 1px solid #ececec;
   border-radius: 14px;
-  background: #fff;
   overflow: hidden;
 }
 
@@ -178,20 +176,20 @@ onMounted(async () => {
 }
 
 .card-title {
-  font-weight: 800;
+  font-weight: 700;
   font-size: 14px;
   letter-spacing: -0.2px;
 }
 
 .card-meta {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted);
   margin-top: 4px;
 }
 
 /* Map */
 .map-card {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-1);
 }
 
 .map-wrap {
@@ -203,39 +201,35 @@ onMounted(async () => {
   height: 520px;
   border-radius: 12px;
   overflow: hidden;
-  background: #f6f7f8;
+  background: var(--bg-alt);
 }
 
 /* Panel */
 .panel {
   height: 100%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-1);
 }
 
 .mini-btn {
-  height: 30px;
+  height: var(--btn-h-sm);
   padding: 0 10px;
-  border-radius: 10px;
-  border: 1px solid #e8e8e8;
-  background: #fff;
   font-size: 12px;
-  cursor: pointer;
 }
 .mini-btn:hover {
-  background: #fafafa;
+  background: var(--bg-alt);
 }
 
 .empty {
   padding: 16px 14px 18px;
 }
 .empty-title {
-  font-weight: 800;
+  font-weight: 700;
   font-size: 13px;
 }
 .empty-sub {
   margin-top: 6px;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 /* List */
@@ -245,26 +239,26 @@ onMounted(async () => {
   margin: 0;
   max-height: 520px;
   overflow: auto;
-  border-top: 1px solid #f2f2f2;
+  border-top: 1px solid var(--border);
 }
 
 /* nice scroll */
 .list::-webkit-scrollbar { width: 10px; }
 .list::-webkit-scrollbar-thumb {
-  background: #e9e9e9;
+  background: #e3dcd0;
   border-radius: 999px;
-  border: 3px solid #fff;
+  border: 3px solid var(--surface);
 }
 
 .item {
   padding: 12px 14px;
-  border-bottom: 1px solid #f3f3f3;
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background 0.12s ease;
 }
 
 .item:hover {
-  background: #fcfcfc;
+  background: var(--bg-alt);
 }
 
 .item-top {
@@ -275,31 +269,23 @@ onMounted(async () => {
 }
 
 .name {
-  font-weight: 800;
+  font-weight: 700;
   font-size: 13px;
   letter-spacing: -0.1px;
 }
 
-.badge {
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid #ededed;
-  color: #111;
-  background: #fff;
-}
 
 .addr {
   margin-top: 6px;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted);
   line-height: 1.35;
 }
 
 .meta-row {
   margin-top: 6px;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 /* Responsive */
