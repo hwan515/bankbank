@@ -76,12 +76,16 @@ const login = async () => {
 
   loading.value = true
   try {
-    await accountStore.login({
+    const ok = await accountStore.login({
       username: username.value,
       password: password.value,
       remember: rememberMe.value, // store에서 쓸지 말지는 선택
     })
-    router.push({ name: 'main' })
+    if (ok) {
+      router.push({ name: 'main' })
+    } else {
+      errorMsg.value = '로그인에 실패했어요. 정보를 확인해 주세요.'
+    }
   } catch (e) {
     console.error(e)
     errorMsg.value = '로그인에 실패했어요. 정보를 확인해 주세요.'

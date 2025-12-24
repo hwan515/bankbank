@@ -21,8 +21,11 @@ export const useAccountStore = defineStore('account', () => {
                 }
 
             )
-            token.value = res.data.key
-            
+            const authToken = res.data?.key
+            if (!authToken) {
+                throw new Error('로그인 응답에 토큰이 없습니다.')
+            }
+            token.value = authToken
             // axios 전역 헤더 설정. 
             localStorage.setItem("token", token.value)
             axios.defaults.headers.common['Authorization'] = `Token ${token.value}`
@@ -33,6 +36,12 @@ export const useAccountStore = defineStore('account', () => {
         }
     }
 
+    const clearAuth = () => {
+        token.value = null
+        delete axios.defaults.headers.common.Authorization
+        localStorage.removeItem('token')
+    }
+
     const logout = async () => {
         try {
             await axios.post(
@@ -41,9 +50,7 @@ export const useAccountStore = defineStore('account', () => {
         } catch (e) {
 
         } finally {
-            token.value = null
-            delete axios.defaults.headers.common.Authorization
-            localStorage.removeItem('token')
+            clearAuth()
         }
     }
 
@@ -115,8 +122,13 @@ export const useAccountStore = defineStore('account', () => {
 
     }
 
+    if (typeof window !== 'undefined') {
+        window.addEventListener('auth:logout', () => {
+            clearAuth()
+        })
+    }
 
     return {
-        login, token, isLogin, logout, register, loadProfile, updateProfile, addInformation, load_information
+        login, token, isLogin, logout, clearAuth, register, loadProfile, updateProfile, addInformation, load_information
     }
 })

@@ -42,9 +42,9 @@
             </div>
 
             <div class="field">
-              <label class="label">정렬기간</label>
+              <label class="label">기간 선택</label>
               <select v-model="selectedTerm" class="select">
-                <option value="">선택안함</option>
+                <option value="">전체(최고금리)</option>
                 <option value="6">6개월</option>
                 <option value="12">12개월</option>
                 <option value="24">24개월</option>
@@ -52,18 +52,36 @@
               </select>
             </div>
 
-            <div class="field">
-              <label class="label">&nbsp;</label>
-              <button class="ui-btn ui-btn-primary w100" @click="handleFetchProducts" :disabled="loading">
-                {{ loading ? '조회 중...' : '조회' }}
-              </button>
+            <div class="field" v-if="activeTab === 'saving'">
+              <label class="label">적립 방식</label>
+              <select v-model="selectedSavingType" class="select">
+                <option value="">전체</option>
+                <option value="정액">정액적립식</option>
+                <option value="자유">자유적립식</option>
+              </select>
             </div>
 
-            <div class="field">
+            <div class="field" v-if="activeTab === 'saving'">
+              <label class="label">월 납입액(원)</label>
+              <input
+                v-model.number="monthlyAmount"
+                type="number"
+                class="input"
+                min="0"
+                placeholder="예: 300000"
+              />
+            </div>
+
+            <div class="field span-2 actions">
               <label class="label">&nbsp;</label>
-              <button class="ui-btn ui-btn-ghost w100" @click="resetFilters" :disabled="loading">
-                초기화
-              </button>
+              <div class="actions-row">
+                <button class="ui-btn ui-btn-primary w100" @click="handleFetchProducts" :disabled="loading">
+                  {{ loading ? '조회 중...' : '조회' }}
+                </button>
+                <button class="ui-btn ui-btn-ghost w100" @click="resetFilters" :disabled="loading">
+                  초기화
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -82,7 +100,7 @@
             {{ activeTab === 'deposit' ? '정기예금' : '정기적금' }} 목록
           </div>
           <div class="muted">
-            총 <strong class="strong">{{ products.length }}</strong>개
+            총 <strong class="strong">{{ displayProducts.length }}</strong>개
           </div>
         </div>
 
@@ -94,6 +112,7 @@
                   <th>공시</th>
                   <th>금융회사</th>
                   <th>상품명</th>
+                  <th v-if="showBestTerm" class="nowrap">기준 기간</th>
                   <th class="num">6개월</th>
                   <th class="num">12개월</th>
                   <th class="num">24개월</th>
@@ -103,7 +122,7 @@
 
               <tbody>
                 <tr
-                  v-for="product in products"
+                  v-for="product in displayProducts"
                   :key="product.id"
                   class="row-click"
                   @click="goToDetail(product.id)"
@@ -111,6 +130,9 @@
                   <td class="nowrap">{{ product.dcls_month }}</td>
                   <td class="nowrap">{{ product.kor_co_nm }}</td>
                   <td class="name" :title="product.fin_prdt_nm">{{ product.fin_prdt_nm }}</td>
+                  <td v-if="showBestTerm" class="nowrap">
+                    {{ bestTermLabel(product) }}
+                  </td>
 
                   <td class="num">{{ product.intr_rate_6 != null ? product.intr_rate_6 + '%' : '-' }}</td>
                   <td class="num">{{ product.intr_rate_12 != null ? product.intr_rate_12 + '%' : '-' }}</td>
@@ -118,8 +140,8 @@
                   <td class="num">{{ product.intr_rate_36 != null ? product.intr_rate_36 + '%' : '-' }}</td>
                 </tr>
 
-                <tr v-if="products.length === 0">
-                  <td colspan="7" class="empty">
+                <tr v-if="displayProducts.length === 0">
+                  <td :colspan="showBestTerm ? 8 : 7" class="empty">
                     조회된 상품이 없습니다.
                   </td>
                 </tr>
@@ -128,7 +150,7 @@
           </div>
 
           <div class="hint">
-            * 행을 클릭하면 상세 페이지로 이동합니다.
+            * 행을 클릭하면 상세 페이지로 이동합니다. 기간 미선택 시 최고 금리 기준으로 정렬됩니다.
           </div>
         </div>
       </div>
@@ -153,17 +175,38 @@ const activeTab = ref('deposit')
 const selectedBank = ref('')
 const searchKeyword = ref('')
 const selectedTerm = ref('')
+const selectedSavingType = ref('')
+const monthlyAmount = ref(null)
 
 // 현재 탭에 따른 상품 목록
 const products = computed(() =>
   activeTab.value === 'deposit' ? depositProducts.value : savingProducts.value
 )
+const showBestTerm = computed(() => !selectedTerm.value)
+const displayProducts = computed(() => {
+  const list = products.value ? [...products.value] : []
+  if (!selectedTerm.value) {
+    list.sort((a, b) => {
+      const rateA = bestRateValue(a)
+      const rateB = bestRateValue(b)
+      if (rateA === rateB) return 0
+      if (rateA === null) return 1
+      if (rateB === null) return -1
+      return rateB - rateA
+    })
+  }
+  return list
+})
 
 const handleFetchProducts = async () => {
   const filters = {}
   if (selectedBank.value) filters.bank = selectedBank.value
   if (searchKeyword.value) filters.search = searchKeyword.value
-  if (selectedTerm.value) filters.ordering = `intr_rate_${selectedTerm.value}`
+  if (selectedTerm.value) filters.term_months = selectedTerm.value
+  if (activeTab.value === 'saving') {
+    if (selectedSavingType.value) filters.rsrv_type = selectedSavingType.value
+    if (monthlyAmount.value) filters.monthly_amount = monthlyAmount.value
+  }
 
   try {
     await productsStore.fetchProducts(activeTab.value, filters)
@@ -176,6 +219,8 @@ const resetFilters = () => {
   selectedBank.value = ''
   searchKeyword.value = ''
   selectedTerm.value = ''
+  selectedSavingType.value = ''
+  monthlyAmount.value = null
   handleFetchProducts()
 }
 
@@ -187,6 +232,38 @@ const goToDetail = (id) => {
 watch(activeTab, () => {
   handleFetchProducts()
 })
+
+function bestRateValue(product) {
+  if (product.best_rate != null) {
+    const parsed = Number(product.best_rate)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  const rates = [6, 12, 24, 36].map((term) => {
+    const raw = product[`intr_rate_${term}`]
+    if (raw === null || raw === undefined || raw === '') return null
+    const value = Number(raw)
+    return Number.isFinite(value) ? value : null
+  })
+  const available = rates.filter((v) => v != null)
+  if (!available.length) return null
+  return Math.max(...available)
+}
+
+function bestTermLabel(product) {
+  let term = product.best_term
+  if (term == null) {
+    const bestRate = bestRateValue(product)
+    if (bestRate == null) return '-'
+    const terms = [6, 12, 24, 36].filter((t) => {
+      const raw = product[`intr_rate_${t}`]
+      if (raw === null || raw === undefined || raw === '') return false
+      const value = Number(raw)
+      return Number.isFinite(value) && value === bestRate
+    })
+    term = terms.length ? Math.min(...terms) : null
+  }
+  return term ? `${term}개월` : '-'
+}
 
 onMounted(async () => {
   await productsStore.fetchBanks()
@@ -252,11 +329,13 @@ onMounted(async () => {
 /* 필터 */
 .filter-grid {
   display: grid;
-  grid-template-columns: 1.2fr 2fr 1fr 140px 140px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
   align-items: end;
 }
 .field { display: grid; gap: 6px; }
+.field.span-2 { grid-column: span 2; }
+.actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .label { font-size: 12px; font-weight: 700; color: var(--ink); }
 
 .input, .select {
