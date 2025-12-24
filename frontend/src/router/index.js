@@ -1,116 +1,142 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import MainView from '../views/MainView.vue'
+
+// views
+import MainView from '@/views/MainView.vue'
 import LoginView from '@/views/accounts/LoginView.vue'
 import RegisterView from '@/views/accounts/RegisterView.vue'
+import ProductsListView from '@/views/ProductsListView.vue'
+import DepositDetailView from '@/views/DepositDetailView.vue'
+import SavingDetailView from '@/views/SavingDetailView.vue'
+import CardView from '@/views/CardView.vue'
+import CardDetailView from '@/views/CardDetailView.vue'
 import StockMainView from '@/views/stock/stockMainView.vue'
 import VideoDetailView from '@/views/stock/VideoDetailView.vue'
-import ProductsListView from '../views/ProductsListView.vue'
-import DepositDetailView from '../views/DepositDetailView.vue'
-import SavingDetailView from '../views/SavingDetailView.vue'
-import CardView from '../views/CardView.vue'
-import CardDetailView from '../views/CardDetailView.vue'
 import RoadMap from '@/views/banks/RoadMap.vue'
+import PlaceholderView from '@/views/PlaceholderView.vue'
 import MyPageView from '@/views/accounts/MyPageView.vue'
 import ChartsView from '@/views/charts/chartsView.vue'
-import CommunityListView from '@/views/community/CommunityListView.vue'
-import CommunityDetailView from '@/views/community/CommunityDetailView.vue'
-import PostFormView from '@/views/community/PostFormView.vue'
+
+// store (가드에서 사용)
+import { useAccountStore } from '@/stores/account'
+
+const routes = [
+  // ✅ 공개 페이지
+  {
+    path: '/',
+    name: 'main',
+    component: MainView,
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginView,
+  },
+  {
+    path: '/signup',
+    name: 'signup',
+    component: RegisterView,
+  },
+
+  // ✅ 로그인 필요 페이지
+  {
+    path: '/products',
+    name: 'products',
+    component: ProductsListView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/products/deposit/:id',
+    name: 'deposit-detail',
+    component: DepositDetailView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/products/saving/:id',
+    name: 'saving-detail',
+    component: SavingDetailView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/commodities',
+    name: 'commodities',
+    component: ChartsView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/stocks',
+    name: 'stocks',
+    component: StockMainView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/videos/:id',
+    name: 'video-detail',
+    component: VideoDetailView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/bank-map',
+    name: 'bank-map',
+    component: RoadMap,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/community',
+    name: 'community',
+    component: PlaceholderView,
+    props: { title: '커뮤니티' },
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: MyPageView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/cards',
+    name: 'cards',
+    component: CardView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/cards/:id',
+    name: 'card-detail',
+    component: CardDetailView,
+    meta: { requiresAuth: true },
+  },
+
+  // (선택) 없는 경로 처리
+  // { path: '/:pathMatch(.*)*', redirect: { name: 'main' } },
+]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'main',
-      component: MainView
-    },
-    {
-      path: '/products',
-      name: 'products',
-      component: ProductsListView
-    },
-    {
-      path: '/products/deposit/:id',
-      name: 'deposit-detail',
-      component: DepositDetailView
-    },
-    {
-      path: '/products/saving/:id',
-      name: 'saving-detail',
-      component: SavingDetailView
-    },
-    {
-      path: '/commodities',
-      name: 'commodities',
-      component: ChartsView
-    },
-    {
-      path: '/stocks',
-      name: 'stocks',
-      component: StockMainView,
-    },
-    {
-      path: '/bank-map',
-      name: 'bank-map',
-      component: RoadMap,
-    },
-    {
-      path: '/community',
-      name: 'community',
-      component: CommunityListView,
-    },
-    {
-      path: '/community/new',
-      name: 'community-new',
-      component: PostFormView,
-    },
-    {
-      path: '/community/:id',
-      name: 'community-detail',
-      component: CommunityDetailView,
-    },
-    {
-      path: '/community/:id/edit',
-      name: 'community-edit',
-      component: PostFormView,
-    },
-    {
-      path: '/login',
+  routes,
+})
+
+/**
+ * ✅ 전역 네비게이션 가드
+ * - requiresAuth 라우트인데 로그인 안했으면 로그인으로
+ * - redirect 쿼리에 원래 목적지 저장
+ */
+router.beforeEach((to) => {
+  const accountStore = useAccountStore()
+
+  const requiresAuth = to.matched.some((r) => r.meta?.requiresAuth)
+
+  if (requiresAuth && !accountStore.isLogin) {
+    return {
       name: 'login',
-      component: LoginView,
-    },
-    {
-      path: '/signup',
-      name: 'signup',
-      component: RegisterView,
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: MyPageView
-    },
-    // 카드 관련 라우트
-    {
-      path: '/cards',
-      name: 'cards',
-      component: CardView
-    },
-    {
-      path: '/card-recommendation',
-      name: 'card-recommendation',
-      component: { template: '<h1>card-recommendation</h1>' }
-    },
-    {
-      path: '/videos/:id',
-      name: 'VideoDetail',
-      component: VideoDetailView,
-    },
-    {
-      path: '/cards/:id',
-      name: 'card-detail',
-      component: CardDetailView
+      query: { redirect: to.fullPath },
     }
-  ]
+  }
+
+  // 로그인 한 상태에서 로그인/회원가입 페이지 접근하면 메인으로 보내고 싶으면(선택)
+  // if ((to.name === 'login' || to.name === 'signup') && accountStore.isLogin) {
+  //   return { name: 'main' }
+  // }
 })
 
 export default router
