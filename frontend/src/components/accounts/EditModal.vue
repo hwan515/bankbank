@@ -1,10 +1,11 @@
 <template>
   <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal-content rounded-4 shadow ui-card">
-      <div class="modal-header p-4 pb-3 border-bottom-0">
-        <h1 class="fw-bold mb-0 fs-4">개인정보 수정</h1>
-        <button type="button" class="btn-close" aria-label="Close" @click="emit('close')"></button>
-      </div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-label="개인정보 수정">
+      <header class="modal-header">
+        <div>
+          <h1 class="title">개인정보 수정</h1>
+          <p class="subtitle">이메일과 인사말을 업데이트할 수 있어요.</p>
+        </div>
 
         <button type="button" class="icon-btn" aria-label="Close" @click="emit('close')">✕</button>
       </header>
@@ -119,7 +120,140 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 /* panel */
 .modal-panel {
   width: min(520px, 100%);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 16px 18px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: #111;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #777;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #222;
+}
+.icon-btn:hover {
+  background: #fafafa;
+}
+
+/* body */
+.modal-body {
+  padding: 16px 18px 18px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  color: #111;
+}
+
+.textarea {
+  resize: none;
+  min-height: 110px;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: #cfcfcf;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.input:disabled {
+  background: #fafafa;
+  color: #666;
+}
+
+.help {
+  font-size: 11px;
+  color: #888;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* buttons */
+.btn {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn.solid {
+  background: #111;
+  color: #fff;
+}
+.btn.solid:hover {
+  background: #000;
+}
+.btn.solid:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn.ghost {
+  background: #fff;
+  border-color: #e7e7e7;
+  color: #111;
+}
+.btn.ghost:hover {
+  background: #fafafa;
 }
 </style>
