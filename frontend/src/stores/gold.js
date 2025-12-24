@@ -28,7 +28,7 @@ export const useGoldStore = defineStore('gold', {
       this.error = null
       try {
         // ✅ 백엔드 URL에 맞게 수정 (/api/ prefix 등)
-        const { data } = await axios.get('http://localhost:8000/api/charts/gold/', {
+        const { data } = await axios.get('http://localhost:8000/api/metals/chart/', {
           params: { numOfRows: rows, pageNo: page }, // 백엔드에서 받게 해놨다면
         })
 

@@ -74,8 +74,18 @@ def card_list(request):
     queryset = queryset.order_by('ranking', '-created_at')
 
     # 페이지네이션
-    page = int(request.query_params.get('page', 1))
-    page_size = min(int(request.query_params.get('page_size', 20)), 100)
+    try:
+        page = int(request.query_params.get('page', 1))
+        page = max(1, page)  # 최소 1
+    except (TypeError, ValueError):
+        page = 1
+
+    try:
+        page_size = int(request.query_params.get('page_size', 20))
+        page_size = max(1, min(page_size, 100))  # 1~100 범위로 제한
+    except (TypeError, ValueError):
+        page_size = 20
+
     start = (page - 1) * page_size
     end = start + page_size
 

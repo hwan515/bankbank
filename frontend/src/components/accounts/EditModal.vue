@@ -6,9 +6,6 @@
         <button type="button" class="btn-close" aria-label="Close" @click="emit('close')"></button>
       </div>
 
-        <button type="button" class="icon-btn" aria-label="Close" @click="emit('close')">✕</button>
-      </header>
-
       <div class="modal-body">
         <form @submit.prevent="submit" class="form">
           <div class="field">
@@ -43,7 +40,7 @@
               id="floatingGreeting"
               placeholder="간단한 한 줄 소개를 적어주세요."
               rows="4"
-            />
+            ></textarea>
           </div>
 
           <div class="actions">

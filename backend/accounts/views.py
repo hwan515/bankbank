@@ -55,9 +55,17 @@ User = get_user_model()
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_search(request):
+    """
+    사용자 검색 (DM용) - 본인 제외, 최소 2글자 이상 검색어 필요
+    """
     q = (request.GET.get("q") or "").strip()
-    if not q:
+    if len(q) < 2:
         return Response([])
 
-    qs = User.objects.filter(username__icontains=q).order_by("username")[:10]
+    # 본인 제외하고 검색
+    qs = (
+        User.objects.filter(username__icontains=q)
+        .exclude(id=request.user.id)
+        .order_by("username")[:10]
+    )
     return Response([{"id": u.id, "username": u.username} for u in qs])

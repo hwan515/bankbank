@@ -14,7 +14,7 @@ export const useCommunityStore = defineStore('community', () => {
     try {
       const query = boardType ? `?board=${boardType}` : ''
       const res = await api.get(`/api/community/posts/${query}`)
-      posts.value = res.data
+      posts.value = res.data.results ?? res.data
       return res.data
     } catch (e) {
       error.value = e.message

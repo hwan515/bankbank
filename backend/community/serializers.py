@@ -2,7 +2,38 @@ from rest_framework import serializers
 from .models import Post, Comment
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class ReactionMixin:
+    """반응(좋아요/싫어요) 관련 공통 메서드"""
+
+    def _get_current_user(self):
+        request = self.context.get("request")
+        return request.user if request else None
+
+    def get_is_author(self, obj):
+        user = self._get_current_user()
+        return bool(user and user.is_authenticated and obj.author_id == user.id)
+
+    def get_like_count(self, obj):
+        if hasattr(obj, "like_count"):
+            return obj.like_count
+        return obj.like_users.count()
+
+    def get_dislike_count(self, obj):
+        if hasattr(obj, "dislike_count"):
+            return obj.dislike_count
+        return obj.dislike_users.count()
+
+    def get_user_reaction(self, obj):
+        user = self._get_current_user()
+        if user and user.is_authenticated:
+            if obj.like_users.filter(pk=user.pk).exists():
+                return "like"
+            if obj.dislike_users.filter(pk=user.pk).exists():
+                return "dislike"
+        return None
+
+
+class CommentSerializer(ReactionMixin, serializers.ModelSerializer):
     author_name = serializers.CharField(source="author.username", read_only=True)
     is_author = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
@@ -34,25 +65,6 @@ class CommentSerializer(serializers.ModelSerializer):
             "user_reaction",
         ]
 
-    def get_is_author(self, obj):
-        user = self.context.get("request").user if self.context.get("request") else None
-        return bool(user and user.is_authenticated and obj.author_id == user.id)
-
-    def get_like_count(self, obj):
-        return obj.like_users.count()
-
-    def get_dislike_count(self, obj):
-        return obj.dislike_users.count()
-
-    def get_user_reaction(self, obj):
-        user = self.context.get("request").user if self.context.get("request") else None
-        if user and user.is_authenticated:
-            if obj.like_users.filter(pk=user.pk).exists():
-                return "like"
-            if obj.dislike_users.filter(pk=user.pk).exists():
-                return "dislike"
-        return None
-
 
 class PostListSerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source="author.username", read_only=True)
@@ -73,7 +85,7 @@ class PostListSerializer(serializers.ModelSerializer):
             "dislike_count",
         ]
 
-class PostDetailSerializer(serializers.ModelSerializer):
+class PostDetailSerializer(ReactionMixin, serializers.ModelSerializer):
     author_name = serializers.CharField(source="author.username", read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     is_author = serializers.SerializerMethodField()
@@ -107,26 +119,3 @@ class PostDetailSerializer(serializers.ModelSerializer):
             "user_reaction",
             "comments",
         ]
-
-    def get_is_author(self, obj):
-        user = self.context.get("request").user if self.context.get("request") else None
-        return bool(user and user.is_authenticated and obj.author_id == user.id)
-
-    def get_like_count(self, obj):
-        if hasattr(obj, "like_count"):
-            return obj.like_count
-        return obj.like_users.count()
-
-    def get_dislike_count(self, obj):
-        if hasattr(obj, "dislike_count"):
-            return obj.dislike_count
-        return obj.dislike_users.count()
-
-    def get_user_reaction(self, obj):
-        user = self.context.get("request").user if self.context.get("request") else None
-        if user and user.is_authenticated:
-            if obj.like_users.filter(pk=user.pk).exists():
-                return "like"
-            if obj.dislike_users.filter(pk=user.pk).exists():
-                return "dislike"
-        return None
