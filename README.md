@@ -144,7 +144,7 @@ await self.channel_layer.group_send(
 
 ### Architecture Diagram
 
-![alt text](images/아키텍처.jpg)
+![Arichitecture_diagram](./images/Arichitecture_diagram.jpg)
 
 ### 기술 스택 (Tech Stack)
 
