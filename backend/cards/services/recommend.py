@@ -49,10 +49,8 @@ class CardRecommendService:
     """
 
     # 점수 가중치 (조정 가능)
-    WEIGHT_SEMANTIC = 0.40
-    WEIGHT_FIT = 0.40
-    WEIGHT_PENALTY = 0.15
-    WEIGHT_FEE_PENALTY = 0.05
+    WEIGHT_SEMANTIC = 0.50
+    WEIGHT_FIT = 0.50
 
     def __init__(self):
         # GMS API (OpenAI 호환)
@@ -190,29 +188,6 @@ class CardRecommendService:
         denom = sum(float(v) for v in category_weights.values()) or 1.0
         return min(score / denom, 1.0)
 
-    def _calc_penalty(
-        self, card: Card,
-        max_min_spending: Optional[int],
-        max_annual_fee: Optional[int]
-    ) -> float:
-        """전월실적/연회비 패널티 계산"""
-        penalty = 0.0
-
-        # 전월실적 패널티
-        if max_min_spending and card.min_spending > max_min_spending:
-            over = card.min_spending - max_min_spending
-            penalty += min(over / 500000.0, 0.5)  # 50만원 초과당 최대 0.5
-
-        return penalty
-
-    def _calc_fee_penalty(self, card: Card, max_annual_fee: Optional[int]) -> float:
-        """연회비 패널티 계산"""
-        if not max_annual_fee or card.annual_fee_min <= max_annual_fee:
-            return 0.0
-
-        over = card.annual_fee_min - max_annual_fee
-        return min(over / 100000.0, 0.3)  # 10만원 초과당 최대 0.3
-
     def _generate_reasons(self, card: Card, *args, **kwargs) -> List[str]:
         """
         추천 이유를 생성합니다. DB에서 조회한 가장 메인이 되는 혜택을 이유로 제시합니다.
@@ -261,8 +236,6 @@ class CardRecommendService:
         """
         filters = filters or {}
         category_weights = filters.get('category_weights', {})
-        max_min_spending = filters.get('max_min_spending')
-        max_annual_fee = filters.get('max_annual_fee')
 
         # 1. SQL 후보군 (순서 보장)
         sql_candidates = self._get_sql_candidates(filters)
@@ -317,16 +290,10 @@ class CardRecommendService:
             # fit score
             fit_score = self._calc_fit_score(card, category_weights)
 
-            # penalties
-            penalty = self._calc_penalty(card, max_min_spending, max_annual_fee)
-            fee_penalty = self._calc_fee_penalty(card, max_annual_fee)
-
-            # total score
+            # total score (Semantic + Fit)
             total = (
                 self.WEIGHT_SEMANTIC * semantic_score +
-                self.WEIGHT_FIT * fit_score -
-                self.WEIGHT_PENALTY * penalty -
-                self.WEIGHT_FEE_PENALTY * fee_penalty
+                self.WEIGHT_FIT * fit_score
             )
 
             # 랭킹 보너스 (작은 보정)
@@ -395,8 +362,6 @@ class CardRecommendService:
             RecommendHit 리스트 (fit_score 기반 정렬)
         """
         category_weights = filters.get('category_weights', {})
-        max_min_spending = filters.get('max_min_spending')
-        max_annual_fee = filters.get('max_annual_fee')
 
         if not category_weights:
             return []
@@ -427,16 +392,8 @@ class CardRecommendService:
             if fit_score == 0:
                 continue
 
-            # penalties
-            penalty = self._calc_penalty(card, max_min_spending, max_annual_fee)
-            fee_penalty = self._calc_fee_penalty(card, max_annual_fee)
-
-            # total score (semantic 없이 fit_score 중심)
-            total = (
-                0.70 * fit_score -
-                0.20 * penalty -
-                0.10 * fee_penalty
-            )
+            # total score (Fit only, Semantic 없음)
+            total = fit_score
 
             # 랭킹 보너스
             if card.ranking:

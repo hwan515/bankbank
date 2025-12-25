@@ -6,10 +6,9 @@ import random
 import sqlite3
 from typing import Any, Dict, List, Optional, Tuple
 
-# pip install python-dotenv openai json_repair
 from dotenv import load_dotenv
 from openai import OpenAI
-import json_repair  # 필수 라이브러리
+import json_repair
 
 # ======================
 # 0) Config
@@ -28,7 +27,6 @@ SLEEP_BETWEEN_CALLS = 0.5
 BATCH_COMMIT = 10
 TEMPERATURE = 0.0
 
-# [수정됨] "교육" 카테고리 추가
 ALLOWED_CATEGORY = {
     "교통", "통신", "쇼핑", "카페", "음식", "주유", 
     "공과금", "구독", "간편결제", "문화", "여행", "의료", "교육", "기타"
@@ -38,7 +36,6 @@ ALLOWED_UNIT = {"퍼센트", "원", "리터", "마일", "점"}
 
 REQUIRED_KEYS = ("category", "brand", "type", "value", "unit", "limit", "cond")
 
-# [수정됨] 교육 카테고리 가이드 추가
 SYSTEM_PROMPT = """
 당신은 카드 혜택 텍스트를 정형화하는 파서입니다.
 반드시 스키마에 맞는 JSON 객체만 출력하세요: {"items":[...]}
@@ -130,7 +127,7 @@ SYSTEM_PROMPT = """
 # ======================
 # 0-1) Structured Outputs: JSON Schema & Tools
 # ======================
-# 스키마는 "items" 래퍼를 씌워서 (일부 환경에서 최상위 array보다 호환성이 좋아서) 사용합니다.
+# 스키마는 "items" 래퍼를 씌워서 (일부 환경에서 최상위 array보다 호환성이 좋아서) 사용
 BENEFIT_ITEM_SCHEMA: Dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
@@ -143,7 +140,7 @@ BENEFIT_ITEM_SCHEMA: Dict[str, Any] = {
         "limit": {"type": "integer"},
         "cond": {"type": "integer"},
     },
-    # cond는 누락될 수 있게 둡니다(누락 시 카드 min_spending으로 보정)
+    # cond는 누락 가능 (추후 누락 시 카드 min_spending으로 보정)
     "required": ["category", "brand", "type", "value", "unit", "limit"],
 }
 
