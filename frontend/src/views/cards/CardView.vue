@@ -28,7 +28,7 @@
           <div class="card-body">
             <div class="row g-3">
               <div class="col-md-4">
-                <div class="input-group">
+                <div class="search-row">
                   <input
                     v-model="searchQuery"
                     type="text"
@@ -136,22 +136,22 @@
           <div class="card ui-card shadow-sm mb-4">
             <div class="card-body p-4">
               <form @submit.prevent="handleRecommend">
-                <div class="input-group input-group-lg mb-3">
+                <div class="recommend-row mb-3">
                   <input
                     v-model="recommendQuery"
                     type="text"
-                    class="form-control"
+                    class="input recommend-input"
                     placeholder="예: 스타벅스 할인 많은 카드, 주유 혜택 좋은 카드"
                     :disabled="isLoading"
                   />
-                  <button type="submit" class="ui-btn ui-btn-primary" :disabled="isLoading || !recommendQuery.trim()">
+                  <button type="submit" class="ui-btn ui-btn-primary recommend-btn" :disabled="isLoading || !recommendQuery.trim()">
                     <span v-if="isLoading && activeTab === 'recommend'" class="spinner-border spinner-border-sm me-2"></span>
                     {{ isLoading && activeTab === 'recommend' ? '검색 중...' : '추천받기' }}
                   </button>
                 </div>
 
                 <!-- 필터 옵션 (접이식) -->
-                <div class="mb-3">
+                <div class="filter-actions mb-3">
                   <button
                     type="button"
                     class="ui-btn ui-btn-ghost ui-btn-sm"
@@ -169,15 +169,15 @@
                   </button>
                 </div>
 
-                <div v-show="showFilters" class="row g-3 mb-3">
-                  <div class="col-md-3">
+                <div v-show="showFilters" class="recommend-filter-grid mb-3">
+                  <div class="field">
                     <label class="form-label small ui-text-muted">카드사</label>
                     <select v-model="recFilters.company" class="form-select form-select-sm">
                       <option value="">전체</option>
                       <option v-for="c in companies" :key="c" :value="c">{{ c }}</option>
                     </select>
                   </div>
-                  <div class="col-md-3">
+                  <div class="field">
                     <label class="form-label small ui-text-muted">카드 종류</label>
                     <select v-model="recFilters.card_type" class="form-select form-select-sm">
                       <option value="">전체</option>
@@ -185,7 +185,7 @@
                       <option value="CHK">체크카드</option>
                     </select>
                   </div>
-                  <div class="col-md-3">
+                  <div class="field">
                     <label class="form-label small ui-text-muted">연회비 상한</label>
                     <select v-model="recFilters.max_annual_fee" class="form-select form-select-sm">
                       <option :value="null">제한 없음</option>
@@ -196,7 +196,7 @@
                       <option :value="100000">10만원 이하</option>
                     </select>
                   </div>
-                  <div class="col-md-3">
+                  <div class="field">
                     <label class="form-label small ui-text-muted">전월실적 상한</label>
                     <select v-model="recFilters.max_min_spending" class="form-select form-select-sm">
                       <option :value="null">제한 없음</option>
@@ -539,6 +539,17 @@ function goToDetail(cardId) {
   flex: 1;
   height: var(--btn-h);
 }
+.filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.recommend-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.recommend-filter-grid .field { display: grid; gap: 6px; }
 
 /* 박스 */
 .box {
@@ -563,6 +574,9 @@ function goToDetail(cardId) {
   grid-template-columns: 1fr auto;
   gap: 8px;
 }
+.search-row .ui-btn { height: 42px; }
+.recommend-input { height: 48px; font-size: 15px; }
+.recommend-btn { height: 48px; }
 .input, .select {
   height: 42px;
   border-radius: var(--radius-sm);
@@ -764,14 +778,18 @@ function goToDetail(cardId) {
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rec-card { grid-template-columns: 54px 140px 1fr; }
   .score { text-align: left; }
+  .recommend-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 576px) {
   .tabs { grid-template-columns: 1fr; }
+  .recommend-tabs { flex-direction: column; }
   .filter-row { grid-template-columns: 1fr; }
   .grid { grid-template-columns: 1fr; }
+  .search-row { grid-template-columns: 1fr; }
   .recommend-row { grid-template-columns: 1fr; }
   .search-row .ui-btn { width: 100%; }
   .rec-card { grid-template-columns: 54px 1fr; }
   .rec-img-wrap { grid-column: 1 / -1; height: 90px; }
+  .recommend-filter-grid { grid-template-columns: 1fr; }
 }
 </style>

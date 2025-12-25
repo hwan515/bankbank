@@ -35,22 +35,22 @@
   <!-- Recommendation Result Variant -->
   <div v-else-if="variant === 'recommend'" class="card ui-card h-100 card-hover" @click="$emit('clicked')" style="cursor: pointer;">
     <div class="card-body">
-      <div class="row align-items-center">
-        <div class="col-auto">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-sm-auto text-center">
           <div class="rounded-circle d-flex align-items-center justify-content-center" :class="getRankBadgeClass(recommendation.index)" style="width: 50px; height: 50px;">
             <span class="fw-bold fs-5">{{ recommendation.index + 1 }}</span>
           </div>
         </div>
-        <div class="col-auto">
+        <div class="col-12 col-sm-auto text-center">
           <CardImage
             :src="card.image_url"
             :alt="card.name"
             img-class="rounded"
-            img-style="width: 120px; height: 76px; object-fit: contain; background: #f8f9fa;"
+            img-style="width: 120px; height: 76px; max-width: 100%; object-fit: contain; background: #f8f9fa;"
             placeholder-size="120x76"
           />
         </div>
-        <div class="col">
+        <div class="col-12 col-md">
           <div class="d-flex align-items-center mb-1">
             <span class="ui-badge me-2">{{ card.company }}</span>
             <span v-if="card.ranking" class="ui-badge ui-badge-warning">인기 {{ card.ranking }}위</span>
@@ -74,7 +74,7 @@
             </span>
           </div>
         </div>
-        <div class="col-auto text-end">
+        <div class="col-12 col-md-auto text-md-end">
           <div class="ui-text-muted small">매칭 점수</div>
           <div class="fs-4 fw-bold" :class="getScoreClass(recommendation.score)">{{ formatScore(recommendation.score) }}</div>
         </div>

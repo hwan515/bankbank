@@ -1,6 +1,12 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:8000'
+const apiBaseUrl = API_BASE_URL.replace(/\/$/, '')
+
 export const useGoldStore = defineStore('gold', {
   state: () => ({
     chart: { labels: [], series: [] },
@@ -20,7 +26,7 @@ export const useGoldStore = defineStore('gold', {
           if (end) params.end = end
         }
 
-        const { data } = await axios.get('http://localhost:8000/api/metals/chart/', { params })
+        const { data } = await axios.get(`${apiBaseUrl}/api/metals/chart/`, { params })
 
         this.chart = data
         this.datasets = (data.series || []).map((s) => ({

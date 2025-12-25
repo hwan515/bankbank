@@ -3,6 +3,12 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 import { ref, computed } from 'vue'
 export const useAccountStore = defineStore('account', () => {
+    const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL ||
+        import.meta.env.VITE_API_URL ||
+        'http://localhost:8000'
+    const apiBaseUrl = API_BASE_URL.replace(/\/$/, '')
+    const buildUrl = (path) => `${apiBaseUrl}${path}`
 
     //  토큰 설정. 
     const token = ref(localStorage.getItem("token")) // 새로고침 복원
@@ -14,7 +20,7 @@ export const useAccountStore = defineStore('account', () => {
     const login = async (payload) => {
         try {
             const res = await axios.post(
-                'http://localhost:8000/accounts/login',
+                buildUrl('/accounts/login'),
                 {
                     username: payload.username,
                     password: payload.password
@@ -45,7 +51,7 @@ export const useAccountStore = defineStore('account', () => {
     const logout = async () => {
         try {
             await axios.post(
-                'http://localhost:8000/accounts/logout',
+                buildUrl('/accounts/logout'),
             )
         } catch (e) {
 
@@ -57,7 +63,7 @@ export const useAccountStore = defineStore('account', () => {
     const register = async (payload) => {
         try {
             await axios.post(
-                'http://localhost:8000/accounts/signup/',
+                buildUrl('/accounts/signup/'),
                 {
                     username: payload.username,
                     age: payload.age,
@@ -77,7 +83,7 @@ export const useAccountStore = defineStore('account', () => {
     const loadProfile = async () => {
         try {
             const response = await axios.get(
-                'http://localhost:8000/api/accounts/profile'
+                buildUrl('/api/accounts/profile')
             )
             console.log(response.data)
             return response.data; // 보통 data만 리턴하는 게 편함
@@ -92,7 +98,7 @@ export const useAccountStore = defineStore('account', () => {
     const updateProfile = async (payload) => {
         try {
             // 백엔드에서 /accounts/profile/ PATCH로 greeting 수정하도록 만들기
-            const res = await axios.patch("http://localhost:8000/api/accounts/profile/", payload);
+            const res = await axios.patch(buildUrl('/api/accounts/profile/'), payload);
             return res.data; // 업데이트된 프로필 리턴해도 됨
         } catch (e) {
             console.error("프로필 수정 실패", e?.response?.data || e);
@@ -102,7 +108,7 @@ export const useAccountStore = defineStore('account', () => {
 
     const addInformation = async (payload) => {
         try {
-            const res = await axios.post('http://localhost:8000/api/accounts/information/', payload)
+            const res = await axios.post(buildUrl('/api/accounts/information/'), payload)
             return res.data; 
         } catch(e) {
             console.error('정보 생성 실패', e?.response?.data || e);
@@ -112,7 +118,7 @@ export const useAccountStore = defineStore('account', () => {
 
     const load_information = async() => {
         try {
-            const response = await axios.get('http://localhost:8000/api/accounts/information')
+            const response = await axios.get(buildUrl('/api/accounts/information'))
             return response.data;    
         } catch(e) {
             console.error('정보 불러오기 실패', e?.response?.data || e)

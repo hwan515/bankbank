@@ -2,6 +2,12 @@ import axios from "axios";
 import { ref } from "vue";
 import { defineStore } from "pinia";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:8000";
+const apiBaseUrl = API_BASE_URL.replace(/\/$/, "");
+
 function getCurrentPos() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
@@ -98,7 +104,7 @@ export const useMapStore = defineStore("map", () => {
 
   let res;
   try {
-    res = await axios.get("http://localhost:8000/api/directions/", {
+    res = await axios.get(`${apiBaseUrl}/api/directions/`, {
       params: {
         origin_lng: originLng,
         origin_lat: originLat,

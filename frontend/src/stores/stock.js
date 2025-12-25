@@ -2,6 +2,12 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:8000'
+const apiBaseUrl = API_BASE_URL.replace(/\/$/, '')
+
 export const useStockStore = defineStore('stock', () => {
   const videoList = ref([])
 
@@ -10,7 +16,7 @@ export const useStockStore = defineStore('stock', () => {
 
   const load = async () => {
     try {
-        const res = await axios.get("http://localhost:8000/stocks/load")
+        const res = await axios.get(`${apiBaseUrl}/stocks/load`)
         // videoList에 넣기. 
         videoList.value = res.data.items ?? []
     } catch(err) {
@@ -21,7 +27,7 @@ export const useStockStore = defineStore('stock', () => {
   const search = async (keyword) => {
     try {
         showOnlyFavorite.value = false
-        const res = await axios.get("http://localhost:8000/stocks/search",
+        const res = await axios.get(`${apiBaseUrl}/stocks/search`,
             {
                 params : {q:keyword}
             }
