@@ -22,7 +22,7 @@
       <div class="box ui-card mb">
         <div class="box-body">
           <div class="filter-grid">
-            <div class="field">
+            <div class="field bank-field">
               <label class="label">은행 선택</label>
               <select v-model="selectedBank" class="select">
                 <option value="">전체</option>
@@ -30,7 +30,7 @@
               </select>
             </div>
 
-            <div class="field span-2">
+            <div class="field span-2 search-field">
               <label class="label">상품명 검색</label>
               <input
                 v-model="searchKeyword"
@@ -41,7 +41,7 @@
               />
             </div>
 
-            <div class="field">
+            <div class="field term-field">
               <label class="label">기간 선택</label>
               <select v-model="selectedTerm" class="select">
                 <option value="">전체(최고금리)</option>
@@ -52,7 +52,7 @@
               </select>
             </div>
 
-            <div class="field" v-if="activeTab === 'saving'">
+            <div class="field saving-type-field" v-if="activeTab === 'saving'">
               <label class="label">적립 방식</label>
               <select v-model="selectedSavingType" class="select">
                 <option value="">전체</option>
@@ -61,7 +61,7 @@
               </select>
             </div>
 
-            <div class="field" v-if="activeTab === 'saving'">
+            <div class="field amount-field" v-if="activeTab === 'saving'">
               <label class="label">월 납입액(원)</label>
               <input
                 v-model.number="monthlyAmount"
@@ -72,7 +72,7 @@
               />
             </div>
 
-            <div class="field span-2 actions">
+            <div class="field span-2 actions actions-field">
               <label class="label">&nbsp;</label>
               <div class="actions-row">
                 <button class="ui-btn ui-btn-primary w100" @click="handleFetchProducts" :disabled="loading">
@@ -331,8 +331,8 @@ onMounted(async () => {
 /* 필터 */
 .filter-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
   align-items: end;
 }
 .field { display: grid; gap: 6px; }
@@ -415,13 +415,24 @@ onMounted(async () => {
 /* 반응형 */
 @media (max-width: 992px) {
   .filter-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .search-field { grid-column: span 2; }
+  .actions-field { grid-column: span 3; }
   .tabs { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1200px) {
+  .filter-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 22px;
+  }
 }
 @media (max-width: 576px) {
   .tabs { grid-template-columns: 1fr; }
   .filter-grid { grid-template-columns: 1fr; }
+  .field.span-2 { grid-column: span 1; }
+  .actions-field { grid-column: span 1; }
+  .actions-row { grid-template-columns: 1fr; }
   .name { max-width: 260px; }
 }
 </style>

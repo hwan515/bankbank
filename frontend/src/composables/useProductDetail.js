@@ -19,6 +19,8 @@ export function useProductDetail(productType) {
   const monthlyAmount = ref(null)
   const subscriptionInfo = ref({ subscribed: false })
 
+  const allowedTerms = [6, 12, 24, 36]
+
   const availableTerms = computed(() => {
     const product = currentProduct.value
     if (!product) return []
@@ -28,7 +30,8 @@ export function useProductDetail(productType) {
     const terms = options
       .map((option) => Number(option.save_trm))
       .filter((term) => Number.isFinite(term))
-    return Array.from(new Set(terms)).sort((a, b) => a - b)
+    const filtered = terms.filter((term) => allowedTerms.includes(term))
+    return Array.from(new Set(filtered)).sort((a, b) => a - b)
   })
 
   const availableSavingTypes = computed(() => {
@@ -88,12 +91,15 @@ export function useProductDetail(productType) {
   }
 
   const toggleSubscription = async () => {
-    if (!selectedTerm.value && !isSubscribed.value) {
-      alert('가입 기간을 선택해 주세요.')
-      return
+    const termValue = Number(selectedTerm.value)
+    if (!isSubscribed.value) {
+      if (!Number.isFinite(termValue) || !allowedTerms.includes(termValue)) {
+        alert('가입 기간을 선택해 주세요. (6, 12, 24, 36개월)')
+        return
+      }
     }
     const payload = {
-      term_months: selectedTerm.value || null,
+      term_months: Number.isFinite(termValue) ? termValue : null,
     }
     if (productType === 'saving') {
       if (selectedSavingType.value) payload.rsrv_type = selectedSavingType.value
@@ -124,6 +130,7 @@ export function useProductDetail(productType) {
     if (!selectedTerm.value) return false
     const selected = Number(selectedTerm.value)
     if (!Number.isFinite(selected)) return false
+    if (!allowedTerms.includes(selected)) return false
     return true
   })
 
@@ -144,7 +151,11 @@ export function useProductDetail(productType) {
       toastStore.push('변경 필요 없음', { type: 'info' })
       return
     }
-    const payload = { term_months: selectedTerm.value }
+    if (!allowedTerms.includes(selected)) {
+      alert('가입 기간은 6/12/24/36개월만 가능합니다.')
+      return
+    }
+    const payload = { term_months: selected }
     if (productType === 'saving') {
       if (selectedSavingType.value) payload.rsrv_type = selectedSavingType.value
       if (monthlyAmount.value) payload.monthly_amount = monthlyAmount.value
