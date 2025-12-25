@@ -56,8 +56,9 @@ BankBank는 예금부터 카드 추천까지 다양한 금융 서비스를 한�
 #### 추천 방식
 
 1. **하이브리드 추천 (Hybrid)**: 자연어 질의(Semantic) + 사용자 선호도(Fit) + 인기도(Ranking)
+   ![Hybrid_recommender](<./images/Hybrid_recommender.jpg>)
 2. **프로필 기반 추천 (Profile-based)**: 사용자 선호 카테고리(Fit) + 인기도(Ranking)
-
+   ![profile_based_recommender](<./images/profile_based_recommender.jpg>)
 #### 점수 산정 로직
 
 > **Hybrid Score** = (0.5 × Vector Similarity) + (0.5 × Category Fit) + Ranking Bonus
@@ -214,12 +215,89 @@ cd ../backend && python manage.py sync_chroma --all
 
 ---
 
-## 생성형 AI 활용 내용
-* 추천 로직 및 파이프라인 설계 검토
-* 디자인, CSS 통합
-* 추천 변수명
-* 코드 리펙토링
-* N+1 DB 조회 기능 개선
+## 🤖 생성형 AI 활용 내용
+
+개발 전 과정에서 Claude Code를 활용하여 생산성과 코드 품질을 높였습니다.
+
+| 활용 영역 | 상세 내용 |
+|-----------|-----------|
+| **추천 로직 설계** | 하이브리드 추천 알고리즘 점수 산정 로직 검토 및 개선 |
+| **파이프라인 구축** | 크롤링 → 정제 → 임베딩 → 동기화 4단계 데이터 파이프라인 설계 |
+| **코드 리팩토링** | 불필요한 패널티 로직 제거, 가중치 통일 등 코드 최적화 |
+| **N+1 쿼리 개선** | Django ORM `select_related`, `prefetch_related` 적용 |
+| **UI/UX 통합** | 컴포넌트별 CSS 스타일 통일 및 반응형 디자인 적용 |
+
+---
+
+## 🔧 트러블슈팅 (Troubleshooting)
+
+### 1. 챗봇 API 401 인증 오류
+
+**증상**: 챗봇에서 메시지 전송 시 401 Unauthorized 에러 발생
+
+**원인**: `chatbot.js`에서 일반 axios를 사용하여 인증 토큰이 헤더에 포함되지 않음
+
+**해결**:
+```javascript
+// Before
+import axios from 'axios'
+axios.post('/api/chatbot/', { message })
+
+// After
+import api from './api'  // 인터셉터에 토큰 자동 포함
+api.post('/api/chatbot/', { message })
+```
+
+---
+
+### 2. MySQL Migrations 에러
+
+**증상**: db를 sqlite에서 mysql로 변경 후 migrate가 안되는 이유
+
+**원인**: 
+- Django의 `TextField`는 MySQL에서 `LONGTEXT` 타입으로 생성
+- MySQL은 데이터 크기가 정해지지 않은 `TEXT`나 `BLOB` 타입 컬럼에는 길이 제한 없이 `Unique Index`를 걸 수 없음
+
+**해결**:
+``` django
+//models.py
+
+// Before
+fin_prdt_cd = models.TextField()
+
+// After
+fin_prdt_cd = models.CharField(max_length=100, unique=True)
+```
+
+---
+
+### 3. 상세페이지 뒤로가기 탭 오류
+
+**증상**: 적금 상세페이지에서 "목록으로" 클릭 시 예금 탭으로 이동
+
+**원인**: 뒤로가기 링크에 탭 상태를 전달하는 쿼리 파라미터가 누락됨
+
+**해결**:
+```vue
+<!-- Before -->
+<router-link to="/products">← 목록으로</router-link>
+
+<!-- After -->
+<router-link to="/products?tab=saving">← 목록으로</router-link>
+```
+
+---
+
+### 4. 카드 추천 점수 계산 최적화
+
+**증상**: 패널티 계산 함수가 항상 0을 반환하여 무의미한 연산 발생
+
+**원인**: SQL 하드 필터에서 이미 조건 미충족 카드가 제외되어 패널티 로직이 불필요
+
+**해결**:
+- `_calc_penalty()`, `_calc_fee_penalty()` 메서드 삭제
+- 가중치 단순화: `0.50 × Semantic + 0.50 × Fit + Ranking Bonus`
+- `recommend()`와 `recommend_by_profile()` 간 가중치 통일
 
 ---
 
