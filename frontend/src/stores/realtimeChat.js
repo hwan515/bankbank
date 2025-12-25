@@ -6,6 +6,13 @@ export const useRealtimeChatStore = defineStore('realtimeChat', () => {
   const connected = ref(false)
   const messages = ref([])
   const currentRoomId = ref(null)
+  const httpBaseUrl =
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    'http://localhost:8000'
+  const wsBaseUrl =
+    import.meta.env.VITE_WS_BASE_URL ||
+    httpBaseUrl.replace(/^http:\/\//, 'ws://').replace(/^https:\/\//, 'wss://')
 
   const connect = (roomId) => {
     if (!roomId) throw new Error('roomId required')
@@ -20,7 +27,8 @@ export const useRealtimeChatStore = defineStore('realtimeChat', () => {
 
     currentRoomId.value = roomId
     const token = localStorage.getItem('token')
-    const wsUrl = `ws://localhost:8000/ws/chat/${roomId}/?token=${token}`
+    const cleanBase = wsBaseUrl.replace(/\/$/, '')
+    const wsUrl = `${cleanBase}/ws/chat/${roomId}/?token=${token}`
 
     socket.value = new WebSocket(wsUrl)
 
