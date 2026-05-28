@@ -21,6 +21,14 @@ load_dotenv(PROJECT_ROOT / 'backend' / '.env')
 load_dotenv(PROJECT_ROOT / 'analyze_card' / '.env')
 
 
+def _as_bool(value: Any, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {'1', 'true', 'yes', 'y', 'on'}
+
+
 @dataclass
 class RecommendHit:
     """추천 결과 아이템"""
@@ -57,6 +65,11 @@ class CardRecommendService:
         self.gms_api_key = os.getenv('GMS_KEY', '')
         self.chroma_host = getattr(settings, 'CHROMA_HOST', None) or os.getenv('CHROMA_HOST', 'chroma.cocohwan.site')
         self.chroma_port = int(getattr(settings, 'CHROMA_PORT', None) or os.getenv('CHROMA_PORT', '443'))
+        chroma_ssl_setting = getattr(settings, 'CHROMA_SSL', None)
+        self.chroma_ssl = _as_bool(
+            chroma_ssl_setting if chroma_ssl_setting is not None else os.getenv('CHROMA_SSL'),
+            default=self.chroma_port == 443,
+        )
         self.collection_name = getattr(settings, 'CHROMA_COLLECTION', None) or os.getenv('CHROMA_COLLECTION', 'cards_top100_text')
         self.model_name = os.getenv('EMBED_MODEL', 'text-embedding-3-large')
 
@@ -86,7 +99,7 @@ class CardRecommendService:
             chroma_client = chromadb.HttpClient(
                 host=self.chroma_host,
                 port=self.chroma_port,
-                ssl=True,
+                ssl=self.chroma_ssl,
             )
             self._store = Chroma(
                 client=chroma_client,

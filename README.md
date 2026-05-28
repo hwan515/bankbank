@@ -200,13 +200,16 @@ YOUTUBE_API_KEY=...
 # 1. 이미지 빌드
 docker build -t hwan515/bankbank-be:latest ./backend
 docker build -t hwan515/bankbank-fe:latest ./frontend \
-  --build-arg VITE_API_BASE_URL=https://api.bank.cocohwan.site \
-  --build-arg VITE_WS_BASE_URL=wss://api.bank.cocohwan.site
+  --build-arg VITE_API_BASE_URL=https://apibank.cocohwan.site:443 \
+  --build-arg VITE_WS_BASE_URL=wss://apibank.cocohwan.site:443 \
+  --build-arg VITE_KAKAO_JS_KEY=${VITE_KAKAO_JS_KEY}
 
-# 2. 컨테이너 실행
+# 2. 컨테이너 실행 (backend, frontend, ChromaDB)
 docker-compose up -d
 
 ```
+
+ChromaDB는 `docker-compose.yml`의 `chroma` 서비스로 함께 실행되며, 벡터 데이터는 `chroma-data` Docker volume에 저장됩니다. backend는 compose 내부 네트워크에서 `chroma:8000`으로 접속합니다.
 
 ### 데이터 파이프라인 실행 (초기 세팅)
 

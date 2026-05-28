@@ -5,6 +5,14 @@ from django.utils import timezone
 from cards.models import Card, CardEmbeddingState
 
 
+def _as_bool(value, default=False):
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {'1', 'true', 'yes', 'y', 'on'}
+
+
 class Command(BaseCommand):
     help = 'Card 데이터를 Chroma 벡터 DB에 동기화 (임베딩 생성 및 업서트)'
 
@@ -166,16 +174,22 @@ class Command(BaseCommand):
 
         chroma_host = getattr(settings, 'CHROMA_HOST', None) or os.getenv('CHROMA_HOST', 'chroma.cocohwan.site')
         chroma_port = int(getattr(settings, 'CHROMA_PORT', None) or os.getenv('CHROMA_PORT', '443'))
+        chroma_ssl_setting = getattr(settings, 'CHROMA_SSL', None)
+        chroma_ssl = _as_bool(
+            chroma_ssl_setting if chroma_ssl_setting is not None else os.getenv('CHROMA_SSL'),
+            default=chroma_port == 443,
+        )
         collection_name = getattr(settings, 'CHROMA_COLLECTION', None) or os.getenv('CHROMA_COLLECTION', 'cards_top100_text')
         model_name = os.getenv('EMBED_MODEL', 'text-embedding-3-large')
 
-        self.stdout.write(f'Chroma 연결: {chroma_host}:{chroma_port} / {collection_name}')
+        protocol = 'https' if chroma_ssl else 'http'
+        self.stdout.write(f'Chroma 연결: {protocol}://{chroma_host}:{chroma_port} / {collection_name}')
         self.stdout.write(f'임베딩 모델: {model_name} (GMS API)')
 
         client = chromadb.HttpClient(
             host=chroma_host,
             port=chroma_port,
-            ssl=True,
+            ssl=chroma_ssl,
         )
 
         # 컬렉션 가져오기 또는 생성

@@ -19,11 +19,34 @@ services:
       FIN_API_KEY: ${FIN_API_KEY}
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
       DATA_GO_KR_KEY: ${DATA_GO_KR_KEY}
+      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY}
       GMS_KEY: ${GMS_KEY}
       GMS_BASE_URL: ${GMS_BASE_URL:-https://gms.ssafy.io/gmsapi/api.openai.com/v1}
       GMS_MODEL: ${GMS_MODEL:-gpt-4o-mini}
+      CHROMA_HOST: ${CHROMA_HOST:-chroma}
+      CHROMA_PORT: ${CHROMA_PORT:-8000}
+      CHROMA_SSL: ${CHROMA_SSL:-false}
+      CHROMA_COLLECTION: ${CHROMA_COLLECTION:-cards_top100_text}
+      EMBED_MODEL: ${EMBED_MODEL:-text-embedding-3-large}
     ports:
       - "18000:8000"
+    depends_on:
+      - chroma
+    networks:
+      - app-net
+
+  chroma:
+    image: chromadb/chroma:1.3.7
+    container_name: bankbank-chroma
+    restart: unless-stopped
+    environment:
+      IS_PERSISTENT: "TRUE"
+      PERSIST_DIRECTORY: /chroma/chroma
+      ANONYMIZED_TELEMETRY: "FALSE"
+    ports:
+      - "127.0.0.1:18081:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
     networks:
       - app-net
 
@@ -39,3 +62,6 @@ services:
 networks:
   app-net:
     name: ${DOCKER_NETWORK:-bankbank-net}
+
+volumes:
+  chroma-data:
