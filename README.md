@@ -168,50 +168,73 @@ await self.channel_layer.group_send(
 - **AI/ML**: OpenAI API (GPT-4o-mini, text-embedding-3-large)
 - **Infra**: Docker, Docker Compose
 
-### 환경 변수 설정 (.env)
+### 환경 변수 설정
 
-```bash
-# Django & Security
-DJANGO_SECRET_KEY=...
-DEBUG=False
-ALLOWED_HOSTS=bank.cocohwan.site
+운영 배포 환경 변수 예시는 `infra/env.example`에서 관리합니다.
 
-# Databases
-MYSQL_HOST=...
-MYSQL_PASSWORD=...
-REDIS_HOST=...
+| 분류 | 주요 변수 |
+| --- | --- |
+| Django | `DJANGO_SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS` |
+| MySQL | `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DB`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD` |
+| Redis | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PUBLISHED_PORT` |
+| ChromaDB | `CHROMA_HOST`, `CHROMA_PORT`, `CHROMA_SSL`, `CHROMA_COLLECTION`, `EMBED_MODEL` |
+| External APIs | `GMS_KEY`, `FIN_API_KEY`, `YOUTUBE_API_KEY`, `DATA_GO_KR_KEY`, `KAKAO_REST_API_KEY` |
+| Frontend Build | `VITE_API_BASE_URL`, `VITE_WS_BASE_URL`, `VITE_KAKAO_JS_KEY` |
 
-# External APIs
-GMS_KEY=... (OpenAI Proxy Key)
-FIN_API_KEY=... (Financial Supervisory Service)
-YOUTUBE_API_KEY=...
+### 외부 API 키 발급처
 
-```
+| 환경 변수 | 발급처 | 용도 | 발급 방법 |
+| --- | --- | --- | --- |
+| `FIN_API_KEY` | 금융감독원 금융상품통합비교공시 “금융상품 한눈에” (`https://finlife.fss.or.kr`) | 예금/적금/금융회사 API 호출 | 사이트 접속 → 오픈 API 또는 인증키 신청 → 본인/이메일 인증 → 인증키 발급 |
+| `YOUTUBE_API_KEY` | Google Cloud Console (`https://console.cloud.google.com/apis/credentials`) | YouTube 금융 영상 검색 | 프로젝트 생성 → YouTube Data API v3 사용 설정 → 사용자 인증 정보 → API 키 만들기 |
+| `DATA_GO_KR_KEY` | 공공데이터포털 (`https://www.data.go.kr`) | 공공데이터 기반 현물/시세 데이터 연동 | 로그인 → 필요한 OpenAPI 검색 → 활용신청 → 승인 후 일반 인증키 복사 |
+| `KAKAO_REST_API_KEY` / `VITE_KAKAO_JS_KEY` | Kakao Developers (`https://developers.kakao.com`) | 근처 은행 검색/지도 연동 | 애플리케이션 생성 → 플랫폼/도메인 등록 → REST API 키와 JavaScript 키 복사 |
+
+`YOUTUBE_API_KEY`는 발급 후 API 제한을 `YouTube Data API v3`로 설정하는 것을 권장합니다. `DATA_GO_KR_KEY`는 현재 코드에서 직접 호출되는 부분은 제한적이지만, Portainer 환경변수에는 발급받은 값을 등록해 두는 것이 안전합니다.
 
 ---
 
 ## 🚀 배포 및 실행 (Deployment)
 
+### 인프라 파일
+
+운영 관련 파일은 `infra/` 디렉터리에서 관리합니다.
+
+| 파일 | 설명 |
+| --- | --- |
+| `infra/docker-compose.yml` | Backend, Frontend, MySQL, Redis, ChromaDB stack 정의 |
+| `infra/env.example` | Portainer Environment variables 예시 |
+| `infra/README.md` | 배포, DB 이전, Chroma 동기화 절차 |
+
 ### Docker Compose 실행
 
-전체 서비스는 Docker Compose를 통해 원클릭으로 배포됩니다.
+로컬 또는 NAS에서 Compose로 직접 실행할 경우:
 
 ```bash
-# 1. 이미지 빌드
-docker build -t hwan515/bankbank-be:latest ./backend
-docker build -t hwan515/bankbank-fe:latest ./frontend \
-  --build-arg VITE_API_BASE_URL=https://apibank.cocohwan.site:443 \
-  --build-arg VITE_WS_BASE_URL=wss://apibank.cocohwan.site:443 \
-  --build-arg VITE_KAKAO_JS_KEY=${VITE_KAKAO_JS_KEY}
-
-# 2. 컨테이너 실행 (backend, frontend, ChromaDB)
-docker-compose up -d
-
+docker compose --env-file infra/env.example -f infra/docker-compose.yml up -d
 ```
 
-ChromaDB는 `docker-compose.yml`의 `chroma` 서비스로 함께 실행되며, 벡터 데이터는 `chroma-data` Docker volume에 저장됩니다. backend는 compose 내부 네트워크에서 `chroma:8000`으로 접속합니다.
+### Portainer 배포
 
-### 데이터 파이프라인 실행 (초기 세팅)
+1. Portainer에서 Stack 생성
+2. `infra/docker-compose.yml` 내용을 Web editor에 입력
+3. `infra/env.example` 값을 실제 운영 값으로 바꿔 Environment variables에 등록
+4. Stack 배포
+5. 기존 DB를 이전하는 경우 새 MySQL이 빈 상태일 때 덤프 복원
+
+### 기존 DB 이전
+
+기존 운영 DB는 `hwan515.synology.me:23306 / finance_db`를 사용했습니다. 새 stack MySQL의 기본 공개 포트는 포트 충돌을 피하기 위해 `33306`입니다.
+
+```bash
+mysqldump -h hwan515.synology.me -P 23306 -u user -p \
+  --single-transaction --routines --triggers --events \
+  --set-gtid-purged=OFF finance_db > finance_db.sql
+
+mysql -h hwan515.synology.me -P 33306 -u root -p finance_db < finance_db.sql
+```
+
+### 데이터 파이프라인 실행
 
 서비스 구동 후 카드 데이터를 적재하려면 아래 명령어를 순차적으로 실행합니다.
 
@@ -226,8 +249,7 @@ cd ../backend && python manage.py migrate_cards
 cd ../analyze_card && python benefit_refine_data.py
 
 # 4. 벡터 DB 동기화
-cd ../backend && python manage.py sync_chroma --all
-
+cd ../backend && python manage.py sync_chroma --all --batch-size 50
 ```
 
 ---
